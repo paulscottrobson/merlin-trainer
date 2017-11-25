@@ -34,7 +34,7 @@ class PreloadState extends Phaser.State {
                                                "assets/fonts/"+fontName+".fnt");
         }
         // Create music, which is preloaded early.
-        var music:IMusic = null;
+        var music:IMusic = this.game.cache.getJSON("music");
         // Load notes
         // Load metronome sounds
         //this.game.load.audio("metronome",["assets/sounds/metronome.mp3",

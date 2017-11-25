@@ -14,6 +14,8 @@ var MainState = (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     MainState.prototype.init = function (music) {
+        console.log(music);
+        this.music = new Music(music);
     };
     MainState.prototype.create = function () {
     };
@@ -25,6 +27,116 @@ var MainState = (function (_super) {
     MainState.VERSION = "0.93 16-Nov-17 Phaser-CE 2.8.7 (c) PSR 2017";
     return MainState;
 }(Phaser.State));
+var Bar = (function () {
+    function Bar(def, music, barNumber) {
+        this.music = music;
+        this.barNumber = barNumber;
+        this.strums = [];
+        var qbTime = 0;
+        for (var _i = 0, _a = def.split(":"); _i < _a.length; _i++) {
+            var s = _a[_i];
+            var strum = new Strum(s, qbTime, this);
+            qbTime = qbTime + strum.getLength();
+            this.strums.push(strum);
+        }
+    }
+    Bar.prototype.getMusic = function () {
+        return this.music;
+    };
+    Bar.prototype.getBarNumber = function () {
+        return this.barNumber;
+    };
+    Bar.prototype.getStrumCount = function () {
+        return this.strums.length;
+    };
+    Bar.prototype.getStrum = function (strumID) {
+        return this.strums[strumID];
+    };
+    Bar.prototype.toString = function () {
+        var s = "";
+        for (var _i = 0, _a = this.strums; _i < _a.length; _i++) {
+            var s1 = _a[_i];
+            s = s + " " + s1.toString();
+        }
+        return "{" + s + "}";
+    };
+    return Bar;
+}());
+var Music = (function () {
+    function Music(music) {
+        this.beats = parseInt(music.beats, 10);
+        this.tempo = parseInt(music.tempo, 10);
+        this.name = music.title;
+        this.bars = [];
+        for (var _i = 0, _a = music.bars; _i < _a.length; _i++) {
+            var b = _a[_i];
+            this.bars.push(new Bar(b, this, this.bars.length));
+        }
+        console.log(this.toString());
+    }
+    Music.prototype.getDefaultTempo = function () {
+        return this.tempo;
+    };
+    Music.prototype.getBeats = function () {
+        return this.beats;
+    };
+    Music.prototype.getBarCount = function () {
+        return this.bars.length;
+    };
+    Music.prototype.getTitle = function () {
+        return this.name;
+    };
+    Music.prototype.getBar = function (barNumber) {
+        return this.bars[barNumber];
+    };
+    Music.prototype.toString = function () {
+        var s = "{" + this.getTitle() + " " + this.getDefaultTempo() + " " + this.getBeats() + " " + this.getBarCount();
+        for (var _i = 0, _a = this.bars; _i < _a.length; _i++) {
+            var b = _a[_i];
+            s = s + " " + b.toString();
+        }
+        return s + "}";
+    };
+    return Music;
+}());
+var Strum = (function () {
+    function Strum(def, startTime, bar) {
+        this.startTime = startTime;
+        this.bar = bar;
+        this.strum = [];
+        this.length = def.charCodeAt(3) - 96;
+        for (var i = 0; i < 3; i++) {
+            var fret = def.charAt(i) == "-" ? Strum.NOSTRUM : def.charCodeAt(i) - 48;
+            this.strum.push(fret);
+        }
+    }
+    Strum.prototype.getStrum = function () {
+        return this.strum;
+    };
+    Strum.prototype.getStartTime = function () {
+        return this.startTime;
+    };
+    Strum.prototype.getEndTime = function () {
+        return this.startTime + this.length;
+    };
+    Strum.prototype.getLength = function () {
+        return this.length;
+    };
+    Strum.prototype.getBar = function () {
+        return this.bar;
+    };
+    Strum.prototype.toString = function () {
+        var s = "";
+        for (var _i = 0, _a = this.strum; _i < _a.length; _i++) {
+            var x = _a[_i];
+            s = s + ((x < 0) ? "-" : x.toString());
+        }
+        s = s + "," + this.length.toString();
+        return "{" + s + "}";
+    };
+    Strum.NOSTRUM = -1;
+    return Strum;
+}());
 window.onload = function () {
     var game = new MerlinTrainerApplication();
 };
@@ -90,7 +202,7 @@ var PreloadState = (function (_super) {
             var fontName = _a[_i];
             this.game.load.bitmapFont(fontName, "assets/fonts/" + fontName + ".png", "assets/fonts/" + fontName + ".fnt");
         }
-        var music = null;
+        var music = this.game.cache.getJSON("music");
         this.game.load.onLoadComplete.add(function () { _this.game.state.start("Main", true, false, music); }, this);
     };
     return PreloadState;
