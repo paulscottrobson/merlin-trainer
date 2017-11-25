@@ -14,8 +14,8 @@ var MainState = (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     MainState.prototype.init = function (music) {
-        console.log(music);
         this.music = new Music(music);
+        var bgr = new Background(this.game, this.music.getTitle());
     };
     MainState.prototype.create = function () {
     };
@@ -27,6 +27,58 @@ var MainState = (function (_super) {
     MainState.VERSION = "0.93 16-Nov-17 Phaser-CE 2.8.7 (c) PSR 2017";
     return MainState;
 }(Phaser.State));
+var Background = (function (_super) {
+    __extends(Background, _super);
+    function Background(game, title) {
+        var _this = _super.call(this, game) || this;
+        Background.width = game.width;
+        Background.height = game.height;
+        var bgr = _this.game.add.image(0, 0, "sprites", "frame", _this);
+        bgr.width = _this.game.width;
+        bgr.height = _this.game.height;
+        var name = _this.game.add.bitmapText(_this.game.width / 4, 9, "font", title, 32, _this);
+        name.anchor.x = 0.5;
+        name.tint = 0x063B6c;
+        var subBar = _this.game.add.image(_this.game.width / 2, 25, "sprites", "rectangle", _this);
+        subBar.height = 40;
+        subBar.width = _this.game.width / 2 - 10;
+        subBar.anchor.y = 0.5;
+        subBar.tint = 0x063B6c;
+        _this.progress = _this.game.add.image(_this.game.width / 2 + 2, 25, "sprites", "rectangle", _this);
+        _this.progress.height = 36;
+        _this.maxWidth = subBar.width - 4;
+        _this.progress.width = _this.maxWidth / 2;
+        _this.progress.anchor.y = 0.5;
+        _this.progress.tint = 0x0D76D9;
+        _this.test();
+        return _this;
+    }
+    Background.prototype.setProgress = function (percent) {
+        this.progress.width = this.maxWidth * percent / 100;
+    };
+    Background.prototype.test = function () {
+        for (var s = 0; s < 3; s++) {
+            for (var y = 0; y <= 1000; y = y + 100) {
+                var img = this.game.add.image(0, 0, "sprites", (y == 0) ? "spyellow" : "spred", this);
+                img.x = Background.x(s, y);
+                img.y = Background.y(s, y);
+                img.anchor.x = 0.5;
+                img.anchor.y = 1;
+                img.width = img.height = Background.size(y);
+            }
+        }
+    };
+    Background.x = function (str, y) {
+        return (str - 1) * Background.width * (0.24 - y * 0.000175) + Background.width / 2;
+    };
+    Background.y = function (str, y) {
+        return 700 - 620 * y / 1000;
+    };
+    Background.size = function (y) {
+        return (Background.x(1, y) - Background.x(0, y)) * 0.7;
+    };
+    return Background;
+}(Phaser.Group));
 var Bar = (function () {
     function Bar(def, music, barNumber) {
         this.music = music;
