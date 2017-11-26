@@ -20,7 +20,7 @@ class Music implements IMusic {
         for (var b of music.bars) {
             this.bars.push(new Bar(b,this,this.bars.length));
         }
-        console.log(this.toString());
+        //console.log(this.toString());
     }
 
     getDefaultTempo(): number {

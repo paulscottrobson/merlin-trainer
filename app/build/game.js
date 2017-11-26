@@ -50,32 +50,83 @@ var Background = (function (_super) {
         _this.progress.width = _this.maxWidth / 2;
         _this.progress.anchor.y = 0.5;
         _this.progress.tint = 0x0D76D9;
-        _this.test();
+        _this.currNote = [];
+        _this.currNoteText = [];
+        for (var s = 0; s < 3; s++) {
+            var img = _this.game.add.sprite(0, 0, "sprites", "roundrect", _this);
+            img.y = 700;
+            img.x = Background.x(s, img.y);
+            img.width = 1.04 * Background.size(img.y);
+            img.height = 70;
+            img.alpha = 0.5;
+            img.anchor.x = 0.5;
+            img.anchor.y = 1.0;
+            img.tint = 0x00FFFF;
+            _this.currNote[s] = img;
+            var txt = _this.game.add.bitmapText(0, 0, "font", "0", img.height * 0.7, _this);
+            txt.y = img.y - img.height * 0.45;
+            txt.x = Background.x(s, txt.y);
+            txt.anchor.x = txt.anchor.y = 0.5;
+            txt.tint = 0xFFFFFF;
+            txt.rotation = (1 - s) * 0.1;
+            txt.alpha = img.alpha;
+            _this.currNoteText[s] = txt;
+        }
+        _this.test2();
         return _this;
     }
+    Background.prototype.destroy = function () {
+        _super.prototype.destroy.call(this);
+        this.progress = null;
+        this.currNote = this.currNoteText = null;
+    };
+    Background.prototype.setStringBoxText = function (str, txt) {
+        this.currNoteText[str].text = txt;
+    };
     Background.prototype.setProgress = function (percent) {
+        percent = Math.min(100, percent);
+        percent = Math.max(0, percent);
         this.progress.width = this.maxWidth * percent / 100;
     };
     Background.prototype.test = function () {
         for (var s = 0; s < 3; s++) {
             for (var y = 0; y <= 1000; y = y + 100) {
                 var img = this.game.add.image(0, 0, "sprites", (y == 0) ? "spyellow" : "spred", this);
-                img.x = Background.x(s, y);
-                img.y = Background.y(s, y);
+                img.y = Background.y(y);
+                img.x = Background.x(s, img.y);
                 img.anchor.x = 0.5;
                 img.anchor.y = 1;
-                img.width = img.height = Background.size(y);
+                img.width = img.height = Background.size(img.y) * 0.6;
             }
         }
     };
-    Background.x = function (str, y) {
-        return (str - 1) * Background.width * (0.24 - y * 0.000175) + Background.width / 2;
+    Background.prototype.test2 = function () {
+        for (var s = 0; s <= 10; s += 2) {
+            var y = Background.y(s * 100);
+            var img = this.game.add.image(this.game.width / 2, y, "sprites", "rectangle", this);
+            img.width = Background.size(y) * 3.5;
+            img.height = 4;
+            img.anchor.x = 0.5;
+            img.anchor.y = 0.5;
+            img.tint = (s == 0) ? 0xFFFF00 : 0xFF8000;
+            if (s == 10)
+                img.tint = 0x00FF00;
+        }
     };
-    Background.y = function (str, y) {
-        return 700 - 620 * y / 1000;
+    Background.y = function (y) {
+        var camera = 500;
+        y = Background.height - 100 -
+            (1 - camera / (y + camera)) * (Background.height - 200) * 1.5;
+        return y;
     };
-    Background.size = function (y) {
-        return (Background.x(1, y) - Background.x(0, y)) * 0.7;
+    Background.x = function (str, yPixel) {
+        yPixel = Background.height - 100 - yPixel;
+        var x = (str + 1) / 4 * Background.width - Background.width / 2;
+        x = x * (1 - yPixel * 0.0012);
+        return Background.width / 2 + x;
+    };
+    Background.size = function (yPixel) {
+        return Background.x(2, yPixel) - Background.x(1, yPixel);
     };
     return Background;
 }(Phaser.Group));
@@ -124,7 +175,6 @@ var Music = (function () {
             var b = _a[_i];
             this.bars.push(new Bar(b, this, this.bars.length));
         }
-        console.log(this.toString());
     }
     Music.prototype.getDefaultTempo = function () {
         return this.tempo;

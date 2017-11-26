@@ -70,6 +70,13 @@
             "spriteSourceSize":{ "x":0,"y":0,"w":83,"h":83 },
             "sourceSize":{ "w":83,"h":83 }
         },
+        "roundrect": {
+            "frame":{ "x":736,"y":700,"w":144,"h":74 },
+            "rotated":false,
+            "trimmed":false,
+            "spriteSourceSize":{ "x":0,"y":0,"w":144,"h":74 },
+            "sourceSize":{ "w":144,"h":74 }
+        },
         "spmagenta": {
             "frame":{ "x":924,"y":688,"w":83,"h":83 },
             "rotated":false,
@@ -78,28 +85,28 @@
             "sourceSize":{ "w":83,"h":83 }
         },
         "spgreen": {
-            "frame":{ "x":736,"y":700,"w":83,"h":83 },
+            "frame":{ "x":604,"y":732,"w":83,"h":83 },
             "rotated":false,
             "trimmed":false,
             "spriteSourceSize":{ "x":0,"y":0,"w":83,"h":83 },
             "sourceSize":{ "w":83,"h":83 }
         },
         "spcyan": {
-            "frame":{ "x":820,"y":700,"w":83,"h":83 },
+            "frame":{ "x":884,"y":772,"w":83,"h":83 },
             "rotated":false,
             "trimmed":false,
             "spriteSourceSize":{ "x":0,"y":0,"w":83,"h":83 },
             "sourceSize":{ "w":83,"h":83 }
         },
         "chordfinger": {
-            "frame":{ "x":688,"y":784,"w":66,"h":66 },
+            "frame":{ "x":0,"y":804,"w":66,"h":66 },
             "rotated":false,
             "trimmed":false,
             "spriteSourceSize":{ "x":0,"y":0,"w":66,"h":66 },
             "sourceSize":{ "w":66,"h":66 }
         },
         "spbrown": {
-            "frame":{ "x":604,"y":732,"w":83,"h":83 },
+            "frame":{ "x":688,"y":776,"w":83,"h":83 },
             "rotated":false,
             "trimmed":false,
             "spriteSourceSize":{ "x":0,"y":0,"w":83,"h":83 },
@@ -127,7 +134,7 @@
             "sourceSize":{ "w":128,"h":128 }
         },
         "spblue": {
-            "frame":{ "x":904,"y":772,"w":83,"h":83 },
+            "frame":{ "x":772,"y":776,"w":83,"h":83 },
             "rotated":false,
             "trimmed":false,
             "spriteSourceSize":{ "x":0,"y":0,"w":83,"h":83 },
@@ -140,7 +147,7 @@
         "image":"sprites.png",
         "size":{
              "w":1024,
-             "h":857
+             "h":872
          },
          "scale":1
     }
