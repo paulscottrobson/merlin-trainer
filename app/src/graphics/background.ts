@@ -43,7 +43,7 @@ class Background extends Phaser.Group {
         // Current note boxes.
         this.currNote = [];
         this.currNoteText = [];
-        for (var s:number = 0;s < 3;s++) {
+        for (var s:number = 0;s < Configuration.strings;s++) {
             var img:Phaser.Image = this.game.add.sprite(0,0,"sprites","roundrect",this);
             img.y = 700;img.x = Background.x(s,img.y);
             img.width = 1.04*Background.size(img.y);img.height = 70;
@@ -57,7 +57,7 @@ class Background extends Phaser.Group {
             this.currNoteText[s] = txt;
         }
         // Test 2 draws lines at intervals, test 1 shows spheres.
-        this.test2();
+        //this.test2();
         //this.test();
     }
 
@@ -93,7 +93,7 @@ class Background extends Phaser.Group {
      * @memberof Background
      */
     private test(): void {
-        for (var s = 0;s < 3;s++) {
+        for (var s = 0;s < Configuration.strings;s++) {
             for (var y = 0;y <= 1000;y = y + 100) {
                 var img:Phaser.Image = this.game.add.image(0,0,"sprites",(y == 0) ? "spyellow":"spred",this);
                 img.y = Background.y(y);
@@ -112,8 +112,8 @@ class Background extends Phaser.Group {
      * @memberof Background
      */
     private test2(): void {
-        for (var s:number = 0;s <= 10;s+=2) {
-            var y:number = Background.y(s * 100);
+        for (var s:number = 0;s <= 10;s++) {
+                     var y:number = Background.y(s * 100);
             var img:Phaser.Image = this.game.add.image(this.game.width/2,y,"sprites","rectangle",this);
             img.width = Background.size(y)*3.5;img.height = 4;img.anchor.x = 0.5;img.anchor.y = 0.5;
             img.tint = (s == 0) ? 0xFFFF00:0xFF8000;
@@ -147,7 +147,8 @@ class Background extends Phaser.Group {
      */
     public static x(str:number,yPixel:number):number {
         yPixel = Background.height-100-yPixel;
-        var x:number = (str + 1) / 4*Background.width - Background.width/2;
+        var x:number = (str + 1) / (Configuration.strings+1)
+                                *Background.width - Background.width/2;
         x = x * (1 - yPixel * 0.0012);
         return Background.width / 2 + x;
     }

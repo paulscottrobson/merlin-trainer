@@ -18,8 +18,8 @@ class Strum implements IStrum {
         this.startTime = startTime;
         this.bar = bar;
         this.strum = [];
-        this.length = def.charCodeAt(3)-96;
-        for (var i = 0;i < 3;i++) {
+        this.length = def.charCodeAt(Configuration.strings)-96;
+        for (var i = 0;i < Configuration.strings;i++) {
             var fret = def.charAt(i) == "-" ? Strum.NOSTRUM : def.charCodeAt(i)-48;
             this.strum.push(fret);
         }

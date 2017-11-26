@@ -8,6 +8,13 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var Configuration = (function () {
+    function Configuration() {
+    }
+    Configuration.barDepth = 400;
+    Configuration.strings = 3;
+    return Configuration;
+}());
 var MainState = (function (_super) {
     __extends(MainState, _super);
     function MainState() {
@@ -16,6 +23,11 @@ var MainState = (function (_super) {
     MainState.prototype.init = function (music) {
         this.music = new Music(music);
         var bgr = new Background(this.game, this.music.getTitle());
+        for (var b = 4; b >= 0; b--) {
+            var rnd = new Renderer(this.game, this.music.getBar(b));
+            rnd.moveTo(b * Configuration.barDepth);
+            rnd.sort();
+        }
     };
     MainState.prototype.create = function () {
     };
@@ -24,7 +36,7 @@ var MainState = (function (_super) {
     MainState.prototype.update = function () {
         var elapsed = this.game.time.elapsedMS;
     };
-    MainState.VERSION = "0.93 16-Nov-17 Phaser-CE 2.8.7 (c) PSR 2017";
+    MainState.VERSION = "0.01 26-Nov-17 Phaser-CE 2.8.7 (c) PSR 2017";
     return MainState;
 }(Phaser.State));
 var Background = (function (_super) {
@@ -52,7 +64,7 @@ var Background = (function (_super) {
         _this.progress.tint = 0x0D76D9;
         _this.currNote = [];
         _this.currNoteText = [];
-        for (var s = 0; s < 3; s++) {
+        for (var s = 0; s < Configuration.strings; s++) {
             var img = _this.game.add.sprite(0, 0, "sprites", "roundrect", _this);
             img.y = 700;
             img.x = Background.x(s, img.y);
@@ -72,7 +84,6 @@ var Background = (function (_super) {
             txt.alpha = img.alpha;
             _this.currNoteText[s] = txt;
         }
-        _this.test2();
         return _this;
     }
     Background.prototype.destroy = function () {
@@ -89,7 +100,7 @@ var Background = (function (_super) {
         this.progress.width = this.maxWidth * percent / 100;
     };
     Background.prototype.test = function () {
-        for (var s = 0; s < 3; s++) {
+        for (var s = 0; s < Configuration.strings; s++) {
             for (var y = 0; y <= 1000; y = y + 100) {
                 var img = this.game.add.image(0, 0, "sprites", (y == 0) ? "spyellow" : "spred", this);
                 img.y = Background.y(y);
@@ -101,7 +112,7 @@ var Background = (function (_super) {
         }
     };
     Background.prototype.test2 = function () {
-        for (var s = 0; s <= 10; s += 2) {
+        for (var s = 0; s <= 10; s++) {
             var y = Background.y(s * 100);
             var img = this.game.add.image(this.game.width / 2, y, "sprites", "rectangle", this);
             img.width = Background.size(y) * 3.5;
@@ -121,7 +132,8 @@ var Background = (function (_super) {
     };
     Background.x = function (str, yPixel) {
         yPixel = Background.height - 100 - yPixel;
-        var x = (str + 1) / 4 * Background.width - Background.width / 2;
+        var x = (str + 1) / (Configuration.strings + 1)
+            * Background.width - Background.width / 2;
         x = x * (1 - yPixel * 0.0012);
         return Background.width / 2 + x;
     };
@@ -129,6 +141,138 @@ var Background = (function (_super) {
         return Background.x(2, yPixel) - Background.x(1, yPixel);
     };
     return Background;
+}(Phaser.Group));
+var StrumSphere = (function () {
+    function StrumSphere(game, stringID, fretID) {
+        this.game = game;
+        this.stringID = stringID;
+        this.sphere = game.add.image(0, 0, "sprites", "sp" + StrumSphere.colours[fretID]);
+        this.sphere.anchor.x = 0.5;
+        this.sphere.anchor.y = 1;
+        this.sphere.width = this.sphere.height = 10;
+        this.text = game.add.bitmapText(0, 0, "dfont", fretID.toString(), 40);
+        this.text.anchor.x = 0.6;
+        this.text.anchor.y = 0.5;
+    }
+    StrumSphere.prototype.destroy = function () {
+        this.sphere.destroy();
+        this.text.destroy();
+        this.game = this.text = this.sphere = this.sphere = null;
+    };
+    StrumSphere.prototype.setY = function (yPos) {
+        this.sphere.y = yPos;
+        this.sphere.x = Background.x(this.stringID, this.sphere.y);
+        var size = Background.size(this.sphere.y);
+        this.sphere.width = this.sphere.height = size * 0.7;
+        this.text.x = this.sphere.x;
+        this.text.y = this.sphere.y - this.sphere.height * 0.43;
+        this.text.fontSize = size * 0.5;
+    };
+    StrumSphere.prototype.toTop = function () {
+        this.game.world.bringToTop(this.sphere);
+        this.game.world.bringToTop(this.text);
+    };
+    StrumSphere.prototype.setVisible = function (isVisible) {
+        this.sphere.visible = isVisible;
+        this.text.visible = isVisible;
+    };
+    StrumSphere.colours = [
+        "grey", "red", "yellow", "green", "blue", "cyan", "orange", "magenta"
+    ];
+    return StrumSphere;
+}());
+var Renderer = (function (_super) {
+    __extends(Renderer, _super);
+    function Renderer(game, bar) {
+        var _this = _super.call(this, game) || this;
+        _this.isCreated = false;
+        _this.bar = bar;
+        _this.beats = bar.getMusic().getBeats();
+        return _this;
+    }
+    Renderer.prototype.destroy = function () {
+        this.deleteRender();
+        _super.prototype.destroy.call(this);
+        this.bar = null;
+    };
+    Renderer.prototype.createRender = function () {
+        if (this.isCreated)
+            return;
+        this.isCreated = true;
+        this.barLines = [];
+        for (var beat = 0; beat < this.beats; beat++) {
+            var img = this.game.add.image(this.game.width / 2, 0, "sprites", "rectangle", this);
+            this.barLines[beat] = img;
+            img.anchor.x = 0.5;
+            img.anchor.y = 0.5;
+            img.height = (beat == 0) ? 4 : 1;
+            img.tint = (beat == 0) ? 0xFFFF00 : 0x000000;
+        }
+        this.strumMarkers = [];
+        for (var strum = 0; strum < this.bar.getStrumCount(); strum++) {
+            var sInfo = this.bar.getStrum(strum);
+            var frets = sInfo.getStrum();
+            console.log(frets);
+            for (var stringID = 0; stringID < Configuration.strings; stringID++) {
+                if (frets[stringID] != Strum.NOSTRUM) {
+                    var sm = new StrumSphere(this.game, stringID, frets[stringID]);
+                    this.strumMarkers.push(sm);
+                }
+            }
+        }
+    };
+    Renderer.prototype.deleteRender = function () {
+        if (!this.isCreated)
+            return;
+        for (var _i = 0, _a = this.strumMarkers; _i < _a.length; _i++) {
+            var mark = _a[_i];
+            mark.destroy();
+        }
+        this.removeAll(true);
+        this.isCreated = false;
+        this.barLines = null;
+        this.strumMarkers = null;
+    };
+    Renderer.prototype.moveTo = function (barPos) {
+        if (!this.isCreated)
+            this.createRender();
+        this.pos = barPos;
+        for (var beat = 0; beat < this.beats; beat++) {
+            this.barLines[beat].y = this.getY(beat * 4);
+            this.barLines[beat].width = Background.size(this.barLines[beat].y)
+                * ((beat == 0) ? 3.6 : 3.4);
+            this.barLines[beat].visible = this.isVisible(this.barLines[beat].y);
+        }
+        var ixs = 0;
+        for (var strum = 0; strum < this.bar.getStrumCount(); strum++) {
+            var sInfo = this.bar.getStrum(strum);
+            var frets = sInfo.getStrum();
+            for (var stringID = 0; stringID < Configuration.strings; stringID++) {
+                if (frets[stringID] != Strum.NOSTRUM) {
+                    var y = this.getY(sInfo.getStartTime());
+                    this.strumMarkers[ixs].setY(y);
+                    this.strumMarkers[ixs].setVisible(this.isVisible(y));
+                    ixs++;
+                }
+            }
+        }
+    };
+    Renderer.prototype.sort = function () {
+        if (!this.isCreated)
+            return;
+        for (var n = this.strumMarkers.length - 1; n >= 0; n--) {
+            if (this.strumMarkers[n] != null) {
+                this.strumMarkers[n].toTop();
+            }
+        }
+    };
+    Renderer.prototype.getY = function (quarterBeat) {
+        return Math.round(Background.y(this.pos + quarterBeat / (this.beats * 4) * Configuration.barDepth));
+    };
+    Renderer.prototype.isVisible = function (yPixel) {
+        return yPixel <= 700 && yPixel > 65;
+    };
+    return Renderer;
 }(Phaser.Group));
 var Bar = (function () {
     function Bar(def, music, barNumber) {
@@ -206,8 +350,8 @@ var Strum = (function () {
         this.startTime = startTime;
         this.bar = bar;
         this.strum = [];
-        this.length = def.charCodeAt(3) - 96;
-        for (var i = 0; i < 3; i++) {
+        this.length = def.charCodeAt(Configuration.strings) - 96;
+        for (var i = 0; i < Configuration.strings; i++) {
             var fret = def.charAt(i) == "-" ? Strum.NOSTRUM : def.charCodeAt(i) - 48;
             this.strum.push(fret);
         }
@@ -300,7 +444,7 @@ var PreloadState = (function (_super) {
         this.game.load.setPreloadSprite(loader);
         this.game.load.json("sprites", "assets/sprites/sprites.json");
         this.game.load.atlas("sprites", "assets/sprites/sprites.png", "assets/sprites/sprites.json");
-        for (var _i = 0, _a = ["font"]; _i < _a.length; _i++) {
+        for (var _i = 0, _a = ["dfont", "font"]; _i < _a.length; _i++) {
             var fontName = _a[_i];
             this.game.load.bitmapFont(fontName, "assets/fonts/" + fontName + ".png", "assets/fonts/" + fontName + ".fnt");
         }

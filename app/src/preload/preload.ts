@@ -29,7 +29,7 @@ class PreloadState extends Phaser.State {
         this.game.load.atlas("sprites","assets/sprites/sprites.png",
                                        "assets/sprites/sprites.json");
         // Load the fonts
-        for (var fontName of ["font"]) {
+        for (var fontName of ["dfont","font"]) {
             this.game.load.bitmapFont(fontName,"assets/fonts/"+fontName+".png",
                                                "assets/fonts/"+fontName+".fnt");
         }
