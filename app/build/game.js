@@ -274,6 +274,26 @@ var Renderer = (function (_super) {
     };
     return Renderer;
 }(Phaser.Group));
+var Merlin = (function () {
+    function Merlin() {
+    }
+    Merlin.prototype.getStringCount = function () {
+        return 3;
+    };
+    Merlin.prototype.getTuning = function () {
+        return [1, 8, 13];
+    };
+    Merlin.prototype.mapOffsetToFret = function (fret) {
+        return Merlin.fretMap[fret];
+    };
+    Merlin.prototype.isDoubleString = function (stringID) {
+        return (stringID == 2);
+    };
+    Merlin.fretMap = [
+        "0", "0^", "1", "1^", "2", "3", "3^", "4", "4^", "5", "5^", "6", "7", "7^"
+    ];
+    return Merlin;
+}());
 var Bar = (function () {
     function Bar(def, music, barNumber) {
         this.music = music;
