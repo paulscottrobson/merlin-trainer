@@ -37,8 +37,8 @@ class PreloadState extends Phaser.State {
         var music:IMusic = this.game.cache.getJSON("music");
         // Load notes
         // Load metronome sounds
-        //this.game.load.audio("metronome",["assets/sounds/metronome.mp3",
-        //                                  "assets/sounds/metronome.ogg"]);        
+        this.game.load.audio("metronome",["assets/sounds/metronome.mp3",
+                                          "assets/sounds/metronome.ogg"]);        
 
         // Switch to game state when load complete.        
         this.game.load.onLoadComplete.add(() => { this.game.state.start("Main",true,false,music); },this);

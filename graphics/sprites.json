@@ -7,6 +7,13 @@
             "spriteSourceSize":{ "x":0,"y":0,"w":128,"h":128 },
             "sourceSize":{ "w":128,"h":128 }
         },
+        "circle": {
+            "frame":{ "x":908,"y":256,"w":36,"h":36 },
+            "rotated":false,
+            "trimmed":false,
+            "spriteSourceSize":{ "x":0,"y":0,"w":36,"h":36 },
+            "sourceSize":{ "w":36,"h":36 }
+        },
         "spdarkgreen": {
             "frame":{ "x":908,"y":88,"w":83,"h":83 },
             "rotated":false,

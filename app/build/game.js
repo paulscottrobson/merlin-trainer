@@ -18,6 +18,7 @@ var Configuration = (function () {
     Configuration.barDepth = 400;
     Configuration.strings = 3;
     Configuration.instrument = null;
+    Configuration.speedScalar = 1;
     return Configuration;
 }());
 var MainState = (function (_super) {
@@ -25,6 +26,8 @@ var MainState = (function (_super) {
     function MainState() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.barPosition = 0;
+        _this.lastBar = -1;
+        _this.lastQBeat = -1;
         return _this;
     }
     MainState.prototype.init = function (music) {
@@ -35,6 +38,7 @@ var MainState = (function (_super) {
     MainState.prototype.create = function () {
         this.background = new Background(this.game, this.displayMusic.getTitle());
         this.renderManager = new RenderManager(this.game, this.displayMusic);
+        this.metronome = this.game.add.audio("metronome");
     };
     MainState.prototype.destroy = function () {
         this.displayMusic = this.playMusic = null;
@@ -43,9 +47,39 @@ var MainState = (function (_super) {
         this.background = this.renderManager = null;
     };
     MainState.prototype.update = function () {
-        var elapsed = this.game.time.elapsedMS;
-        this.barPosition -= 0.003;
-        this.renderManager.moveTo(this.barPosition);
+        var elapsedMS = this.game.time.elapsedMS;
+        var adj = this.displayMusic.getDefaultTempo();
+        adj = adj / 60;
+        adj = adj / this.displayMusic.getBeats();
+        this.barPosition = this.barPosition + elapsedMS * adj / 1000 * Configuration.speedScalar;
+        this.renderManager.moveTo(-this.barPosition);
+        this.background.setProgress(100 * this.barPosition / this.displayMusic.getBarCount());
+        var bar = Math.floor(this.barPosition);
+        var qBeat = Math.floor((this.barPosition - bar) * 4 * this.displayMusic.getBeats());
+        if ((this.lastBar != bar || this.lastQBeat != qBeat) &&
+            bar < this.displayMusic.getBarCount()) {
+            this.lastBar = bar;
+            this.lastQBeat = qBeat;
+            if (qBeat % 4 == 0) {
+                this.metronome.play("", 0, qBeat == 0 ? 1 : 0.3);
+            }
+            var cBar = this.playMusic.getBar(bar);
+            for (var n = 0; n < cBar.getStrumCount(); n++) {
+                if (cBar.getStrum(n).getStartTime() == qBeat) {
+                    this.actionStrum(cBar.getStrum(n));
+                }
+            }
+        }
+    };
+    MainState.prototype.actionStrum = function (strum) {
+        var chrom = strum.getStrum();
+        for (var n = 0; n < Configuration.strings; n++) {
+            var s = "";
+            if (chrom[n] != Strum.NOSTRUM) {
+                s = Configuration.instrument.mapOffsetToFret(chrom[n]);
+            }
+            this.background.setStringBoxText(n, s);
+        }
     };
     MainState.VERSION = "0.01 26-Nov-17 Phaser-CE 2.8.7 (c) PSR 2017";
     return MainState;
@@ -75,6 +109,7 @@ var Background = (function (_super) {
         _this.progress.tint = 0x0D76D9;
         _this.currNote = [];
         _this.currNoteText = [];
+        _this.currNoteParticles = [];
         for (var s = 0; s < Configuration.strings; s++) {
             var img = _this.game.add.sprite(0, 0, "sprites", "roundrect", _this);
             img.y = 700;
@@ -86,7 +121,7 @@ var Background = (function (_super) {
             img.anchor.y = 1.0;
             img.tint = 0x00FFFF;
             _this.currNote[s] = img;
-            var txt = _this.game.add.bitmapText(0, 0, "font", "0", img.height * 0.7, _this);
+            var txt = _this.game.add.bitmapText(0, 0, "font", "", img.height * 0.7, _this);
             txt.y = img.y - img.height * 0.45;
             txt.x = Background.x(s, txt.y);
             txt.anchor.x = txt.anchor.y = 0.5;
@@ -94,6 +129,16 @@ var Background = (function (_super) {
             txt.rotation = (1 - s) * 0.1;
             txt.alpha = img.alpha;
             _this.currNoteText[s] = txt;
+            _this.currNoteParticles[s] = _this.game.add.emitter(txt.x, txt.y, 60);
+            _this.currNoteParticles[s].makeParticles("sprites", "circle");
+            _this.currNoteParticles[s].setScale(0.5, 1.0, 0.5, 1.0);
+            _this.currNoteParticles[s].gravity.x = 0;
+            _this.currNoteParticles[s].gravity.y = 0;
+            _this.currNoteParticles[s].forEach(function (particle) {
+                particle.tint = Math.floor(Math.random() * 0x1000000);
+            }, _this);
+            _this.currNoteParticles[s].setXSpeed(-200, 200);
+            _this.currNoteParticles[s].setYSpeed(-200, 200);
         }
         return _this;
     }
@@ -104,6 +149,9 @@ var Background = (function (_super) {
     };
     Background.prototype.setStringBoxText = function (str, txt) {
         this.currNoteText[str].text = txt;
+        if (txt != "") {
+            this.currNoteParticles[str].start(true, 800, null, 500);
+        }
     };
     Background.prototype.setProgress = function (percent) {
         percent = Math.min(100, percent);
@@ -458,7 +506,6 @@ var Strum = (function () {
             var fret = def.charAt(i) == "-" ? Strum.NOSTRUM : def.charCodeAt(i) - 97;
             this.strum.push(fret);
         }
-        console.log(this.strum, this.length, def, this.toString());
     }
     Strum.prototype.getStrum = function () {
         return this.strum;
@@ -474,9 +521,6 @@ var Strum = (function () {
     };
     Strum.prototype.getBar = function () {
         return this.bar;
-    };
-    Strum.prototype.getChordName = function () {
-        return "Dm7";
     };
     Strum.prototype.toString = function () {
         var s = "";
@@ -556,6 +600,8 @@ var PreloadState = (function (_super) {
             this.game.load.bitmapFont(fontName, "assets/fonts/" + fontName + ".png", "assets/fonts/" + fontName + ".fnt");
         }
         var music = this.game.cache.getJSON("music");
+        this.game.load.audio("metronome", ["assets/sounds/metronome.mp3",
+            "assets/sounds/metronome.ogg"]);
         this.game.load.onLoadComplete.add(function () { _this.game.state.start("Main", true, false, music); }, this);
     };
     return PreloadState;

@@ -11,6 +11,7 @@ class Background extends Phaser.Group {
     private progress:Phaser.Image;
     private currNote:Phaser.Image[];
     private currNoteText:Phaser.BitmapText[];
+    private currNoteParticles:Phaser.Particles.Arcade.Emitter[];
     private maxWidth:number;
     private static width:number;
     private static height:number;
@@ -43,6 +44,7 @@ class Background extends Phaser.Group {
         // Current note boxes.
         this.currNote = [];
         this.currNoteText = [];
+        this.currNoteParticles = [];
         for (var s:number = 0;s < Configuration.strings;s++) {
             var img:Phaser.Image = this.game.add.sprite(0,0,"sprites","roundrect",this);
             img.y = 700;img.x = Background.x(s,img.y);
@@ -50,11 +52,21 @@ class Background extends Phaser.Group {
             img.alpha = 0.5;
             img.anchor.x = 0.5;img.anchor.y = 1.0;img.tint = 0x00FFFF;
             this.currNote[s] = img;
-            var txt:Phaser.BitmapText = this.game.add.bitmapText(0,0,"font","0",img.height*0.7,this);
+            var txt:Phaser.BitmapText = this.game.add.bitmapText(0,0,"font","",img.height*0.7,this);
             txt.y = img.y - img.height * 0.45;txt.x = Background.x(s,txt.y);
             txt.anchor.x = txt.anchor.y = 0.5;txt.tint = 0xFFFFFF;
             txt.rotation = (1-s)*0.1;txt.alpha = img.alpha;
             this.currNoteText[s] = txt;
+            this.currNoteParticles[s] = this.game.add.emitter(txt.x,txt.y,60);
+            this.currNoteParticles[s].makeParticles("sprites","circle");
+            this.currNoteParticles[s].setScale(0.5,1.0,0.5,1.0);
+            this.currNoteParticles[s].gravity.x = 0;
+            this.currNoteParticles[s].gravity.y = 0;
+            this.currNoteParticles[s].forEach(function(particle){
+                particle.tint = Math.floor(Math.random()*0x1000000);
+            },this);
+            this.currNoteParticles[s].setXSpeed(-200,200);
+            this.currNoteParticles[s].setYSpeed(-200,200);
         }
         // Test 2 draws lines at intervals, test 1 shows spheres.
         //this.test2();
@@ -73,6 +85,9 @@ class Background extends Phaser.Group {
 
     public setStringBoxText(str:number,txt:string) {
         this.currNoteText[str].text = txt;
+        if (txt != "") {
+            this.currNoteParticles[str].start(true,800,null,500);            
+        }
     }
     /**
      * Set percentage completed.

@@ -24,7 +24,7 @@ class Strum implements IStrum {
             var fret = def.charAt(i) == "-" ? Strum.NOSTRUM : def.charCodeAt(i)-97;
             this.strum.push(fret);
         }
-        console.log(this.strum,this.length,def,this.toString());
+        // console.log(this.strum,this.length,def,this.toString());
     }
     getStrum(): number[] {
         return this.strum;
@@ -41,9 +41,6 @@ class Strum implements IStrum {
     getBar(): IBar {
         return this.bar;
     }
-    getChordName(): string {
-        return "Dm7";
-    }    
     toString(): string {
         var s = "";
         for (var x of this.strum) {

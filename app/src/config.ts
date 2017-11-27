@@ -27,6 +27,15 @@ class Configuration {
      */
     public static instrument:IInstrument = null;
 
+    /**
+     * Speed scalar for playing.
+     * 
+     * @static
+     * @type {number}
+     * @memberof Configuration
+     */
+    public static speedScalar:number = 1;
+
     public static initialise(): void {
         Configuration.instrument = new Merlin();
         Configuration.strings = Configuration.instrument.getStringCount();
