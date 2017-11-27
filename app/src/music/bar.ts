@@ -18,9 +18,11 @@ class Bar implements IBar {
         this.strums = [];
         var qbTime = 0;
         for (var s of def.split(":")) {
-            var strum:IStrum = new Strum(s,qbTime,this);
-            qbTime = qbTime + strum.getLength();
-            this.strums.push(strum);
+            if (s != "") {
+                var strum:IStrum = new Strum(s,qbTime,this);
+                qbTime = qbTime + strum.getLength();
+                this.strums.push(strum);
+            }
         }
     }
     getMusic(): IMusic {

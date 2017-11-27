@@ -23,24 +23,29 @@ var Configuration = (function () {
 var MainState = (function (_super) {
     __extends(MainState, _super);
     function MainState() {
-        return _super !== null && _super.apply(this, arguments) || this;
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.barPosition = 0;
+        return _this;
     }
     MainState.prototype.init = function (music) {
         Configuration.initialise();
-        this.music = new Music(music);
-        var bgr = new Background(this.game, this.music.getTitle());
-        for (var b = 4; b >= 0; b--) {
-            var rnd = new Renderer(this.game, this.music.getBar(b));
-            rnd.moveTo(b * Configuration.barDepth);
-            rnd.sort();
-        }
+        this.displayMusic = new Music(music);
+        this.playMusic = this.displayMusic;
     };
     MainState.prototype.create = function () {
+        this.background = new Background(this.game, this.displayMusic.getTitle());
+        this.renderManager = new RenderManager(this.game, this.displayMusic);
     };
     MainState.prototype.destroy = function () {
+        this.displayMusic = this.playMusic = null;
+        this.renderManager.destroy();
+        this.background.destroy();
+        this.background = this.renderManager = null;
     };
     MainState.prototype.update = function () {
         var elapsed = this.game.time.elapsedMS;
+        this.barPosition -= 0.003;
+        this.renderManager.moveTo(this.barPosition);
     };
     MainState.VERSION = "0.01 26-Nov-17 Phaser-CE 2.8.7 (c) PSR 2017";
     return MainState;
@@ -148,67 +153,47 @@ var Background = (function (_super) {
     };
     return Background;
 }(Phaser.Group));
-var StrumSphere = (function () {
-    function StrumSphere(game, stringID, chrom) {
+var RenderManager = (function () {
+    function RenderManager(game, music) {
+        this.lastOffset = -999;
         this.game = game;
-        this.stringID = stringID;
-        this.sphere = game.add.image(0, 0, "sprites", "sp" + StrumSphere.colours[chrom % StrumSphere.colours.length]);
-        this.sphere.anchor.x = 0.5;
-        this.sphere.anchor.y = 1;
-        this.sphere.width = this.sphere.height = 10;
-        var s = Configuration.instrument.mapOffsetToFret(chrom);
-        this.isBent = false;
-        if (s.charAt(s.length - 1) == '^') {
-            this.isBent = true;
-            s = s.substr(0, s.length - 1);
+        this.music = music;
+        this.renderers = [];
+        for (var n = 0; n < music.getBarCount(); n++) {
+            this.renderers[n] = new Renderer(this.game, this.music.getBar(n));
         }
-        this.text = game.add.bitmapText(0, 0, "dfont", s, 10);
-        this.text.anchor.x = 0.6;
-        this.text.anchor.y = 0.5;
-        if (this.isBent) {
-            this.text.tint = 0xFF0000;
-        }
+        this.moveTo(0);
+        this.sortAll();
     }
-    StrumSphere.prototype.destroy = function () {
-        this.sphere.destroy();
-        this.text.destroy();
-        this.game = this.text = this.sphere = this.sphere = null;
+    RenderManager.prototype.destroy = function () {
+        for (var _i = 0, _a = this.renderers; _i < _a.length; _i++) {
+            var r = _a[_i];
+            r.destroy();
+        }
+        this.renderers = this.game = this.music = null;
     };
-    StrumSphere.prototype.setY = function (yPos) {
-        this.sphere.y = yPos;
-        this.sphere.x = Background.x(this.stringID, this.sphere.y);
-        var size = Background.size(this.sphere.y);
-        if (this.isBent)
-            this.sphere.x += size / 6;
-        this.sphere.width = this.sphere.height = size * 0.8;
-        this.text.x = this.sphere.x;
-        this.text.y = this.sphere.y - this.sphere.height * 0.43;
-        this.text.fontSize = size * (this.isBent ? 0.5 : 0.5);
+    RenderManager.prototype.moveTo = function (barOffset) {
+        var sortRequired = false;
+        var offset = Math.round(barOffset * Configuration.barDepth);
+        if (offset == this.lastOffset)
+            return;
+        this.lastOffset = offset;
+        for (var n = 0; n < this.music.getBarCount(); n++) {
+            var oldDisplayed = this.renderers[n].isRendered();
+            this.renderers[n].moveTo(offset + n * Configuration.barDepth);
+            if (this.renderers[n].isRendered() != oldDisplayed) {
+                sortRequired = true;
+            }
+        }
+        if (sortRequired)
+            this.sortAll();
     };
-    StrumSphere.prototype.toTop = function () {
-        this.game.world.bringToTop(this.sphere);
-        this.game.world.bringToTop(this.text);
+    RenderManager.prototype.sortAll = function () {
+        for (var n = this.music.getBarCount() - 1; n >= 0; n--) {
+            this.renderers[n].sort();
+        }
     };
-    StrumSphere.prototype.setVisible = function (isVisible) {
-        this.sphere.visible = isVisible;
-        this.text.visible = isVisible;
-    };
-    StrumSphere.colours = [
-        "black",
-        "grey",
-        "red",
-        "darkgreen",
-        "yellow",
-        "green",
-        "grey",
-        "blue",
-        "grey",
-        "cyan",
-        "brown",
-        "orange",
-        "magenta"
-    ];
-    return StrumSphere;
+    return RenderManager;
 }());
 var Renderer = (function (_super) {
     __extends(Renderer, _super);
@@ -223,6 +208,9 @@ var Renderer = (function (_super) {
         this.deleteRender();
         _super.prototype.destroy.call(this);
         this.bar = null;
+    };
+    Renderer.prototype.isRendered = function () {
+        return this.isCreated;
     };
     Renderer.prototype.createRender = function () {
         if (this.isCreated)
@@ -262,6 +250,10 @@ var Renderer = (function (_super) {
         this.strumMarkers = null;
     };
     Renderer.prototype.moveTo = function (barPos) {
+        if (barPos < -Configuration.barDepth || barPos > 1000 + Configuration.barDepth) {
+            this.deleteRender();
+            return;
+        }
         if (!this.isCreated)
             this.createRender();
         this.pos = barPos;
@@ -275,9 +267,9 @@ var Renderer = (function (_super) {
         for (var strum = 0; strum < this.bar.getStrumCount(); strum++) {
             var sInfo = this.bar.getStrum(strum);
             var frets = sInfo.getStrum();
+            var y = this.getY(sInfo.getStartTime());
             for (var stringID = 0; stringID < Configuration.strings; stringID++) {
                 if (frets[stringID] != Strum.NOSTRUM) {
-                    var y = this.getY(sInfo.getStartTime());
                     this.strumMarkers[ixs].setY(y);
                     this.strumMarkers[ixs].setVisible(this.isVisible(y));
                     ixs++;
@@ -302,6 +294,66 @@ var Renderer = (function (_super) {
     };
     return Renderer;
 }(Phaser.Group));
+var StrumSphere = (function () {
+    function StrumSphere(game, stringID, chrom) {
+        this.game = game;
+        this.stringID = stringID;
+        this.sphere = game.add.image(0, 0, "sprites", "sp" + StrumSphere.colours[chrom % StrumSphere.colours.length]);
+        this.sphere.anchor.x = 0.5;
+        this.sphere.anchor.y = 1;
+        this.sphere.width = this.sphere.height = 10;
+        var s = Configuration.instrument.mapOffsetToFret(chrom);
+        this.isBent = false;
+        if (s.charAt(s.length - 1) == '^') {
+            this.isBent = true;
+            s = s.substr(0, s.length - 1);
+        }
+        this.text = game.add.bitmapText(0, 0, "dfont", s, 10);
+        this.text.anchor.x = 0.6;
+        this.text.anchor.y = 0.5;
+        if (this.isBent) {
+            this.text.tint = 0xFF0000;
+        }
+    }
+    StrumSphere.prototype.destroy = function () {
+        this.sphere.destroy();
+        this.text.destroy();
+        this.game = this.text = this.sphere = this.sphere = null;
+    };
+    StrumSphere.prototype.setY = function (yPos) {
+        this.sphere.y = yPos;
+        this.sphere.x = Background.x(this.stringID, this.sphere.y);
+        var size = Background.size(this.sphere.y);
+        this.sphere.width = this.sphere.height = size * 0.7;
+        this.text.x = this.sphere.x;
+        this.text.y = this.sphere.y - this.sphere.height * 0.43;
+        this.text.fontSize = size * (this.isBent ? 0.5 : 0.5);
+    };
+    StrumSphere.prototype.toTop = function () {
+        this.game.world.bringToTop(this.sphere);
+        this.game.world.bringToTop(this.text);
+    };
+    StrumSphere.prototype.setVisible = function (isVisible) {
+        this.sphere.visible = isVisible;
+        this.text.visible = isVisible;
+    };
+    StrumSphere.colours = [
+        "black",
+        "grey",
+        "red",
+        "darkgreen",
+        "yellow",
+        "green",
+        "grey",
+        "blue",
+        "grey",
+        "cyan",
+        "brown",
+        "orange",
+        "magenta"
+    ];
+    return StrumSphere;
+}());
 var Merlin = (function () {
     function Merlin() {
     }
@@ -330,9 +382,11 @@ var Bar = (function () {
         var qbTime = 0;
         for (var _i = 0, _a = def.split(":"); _i < _a.length; _i++) {
             var s = _a[_i];
-            var strum = new Strum(s, qbTime, this);
-            qbTime = qbTime + strum.getLength();
-            this.strums.push(strum);
+            if (s != "") {
+                var strum = new Strum(s, qbTime, this);
+                qbTime = qbTime + strum.getLength();
+                this.strums.push(strum);
+            }
         }
     }
     Bar.prototype.getMusic = function () {
@@ -420,6 +474,9 @@ var Strum = (function () {
     };
     Strum.prototype.getBar = function () {
         return this.bar;
+    };
+    Strum.prototype.getChordName = function () {
+        return "Dm7";
     };
     Strum.prototype.toString = function () {
         var s = "";

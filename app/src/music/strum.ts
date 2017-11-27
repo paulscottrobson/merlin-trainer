@@ -41,6 +41,9 @@ class Strum implements IStrum {
     getBar(): IBar {
         return this.bar;
     }
+    getChordName(): string {
+        return "Dm7";
+    }    
     toString(): string {
         var s = "";
         for (var x of this.strum) {
