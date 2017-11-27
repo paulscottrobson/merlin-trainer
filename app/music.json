@@ -3,11 +3,11 @@
     "beats":"4",
     "tempo":"100",
     "bars":[
-        "012d:345d:67-d:0-0d",
-        "--2b:---d:222d:-3-b",
-        "000b:111b",
-        "000b:111b",
-        "000b:111b",
-        "000b:111b"
+        "abcd:defd:ghid:jkld",
+        "--mb:---d:aaad:-c-b",
+        "aaab:cccb",
+        "aaab:cccb",
+        "aaab:cccb",
+        "aaab:cccb"
     ]
 }

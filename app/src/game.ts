@@ -6,6 +6,7 @@ class MainState extends Phaser.State {
     public music:IMusic;
     
     init(music:IMusic) {
+        Configuration.initialise();
         this.music = new Music(music);
         var bgr:Background = new Background(this.game,this.music.getTitle());
         for (var b:number = 4;b >= 0;b--) {

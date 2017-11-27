@@ -1,11 +1,3 @@
 1) Multiple streams - play one music, display another ?
 2) string# changes
-3) Convert to diatonic so strings can bend.
 
-Merlin class
-============
-
-Number of strings
-Double Strings.
-Maps diatonic offsets onto values.
-Provides base tuning [1,8,13]

@@ -11,8 +11,13 @@ var __extends = (this && this.__extends) || (function () {
 var Configuration = (function () {
     function Configuration() {
     }
+    Configuration.initialise = function () {
+        Configuration.instrument = new Merlin();
+        Configuration.strings = Configuration.instrument.getStringCount();
+    };
     Configuration.barDepth = 400;
     Configuration.strings = 3;
+    Configuration.instrument = null;
     return Configuration;
 }());
 var MainState = (function (_super) {
@@ -21,6 +26,7 @@ var MainState = (function (_super) {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     MainState.prototype.init = function (music) {
+        Configuration.initialise();
         this.music = new Music(music);
         var bgr = new Background(this.game, this.music.getTitle());
         for (var b = 4; b >= 0; b--) {
@@ -143,16 +149,25 @@ var Background = (function (_super) {
     return Background;
 }(Phaser.Group));
 var StrumSphere = (function () {
-    function StrumSphere(game, stringID, fretID) {
+    function StrumSphere(game, stringID, chrom) {
         this.game = game;
         this.stringID = stringID;
-        this.sphere = game.add.image(0, 0, "sprites", "sp" + StrumSphere.colours[fretID]);
+        this.sphere = game.add.image(0, 0, "sprites", "sp" + StrumSphere.colours[chrom % StrumSphere.colours.length]);
         this.sphere.anchor.x = 0.5;
         this.sphere.anchor.y = 1;
         this.sphere.width = this.sphere.height = 10;
-        this.text = game.add.bitmapText(0, 0, "dfont", fretID.toString(), 40);
+        var s = Configuration.instrument.mapOffsetToFret(chrom);
+        this.isBent = false;
+        if (s.charAt(s.length - 1) == '^') {
+            this.isBent = true;
+            s = s.substr(0, s.length - 1);
+        }
+        this.text = game.add.bitmapText(0, 0, "dfont", s, 10);
         this.text.anchor.x = 0.6;
         this.text.anchor.y = 0.5;
+        if (this.isBent) {
+            this.text.tint = 0xFF0000;
+        }
     }
     StrumSphere.prototype.destroy = function () {
         this.sphere.destroy();
@@ -163,10 +178,12 @@ var StrumSphere = (function () {
         this.sphere.y = yPos;
         this.sphere.x = Background.x(this.stringID, this.sphere.y);
         var size = Background.size(this.sphere.y);
-        this.sphere.width = this.sphere.height = size * 0.7;
+        if (this.isBent)
+            this.sphere.x += size / 6;
+        this.sphere.width = this.sphere.height = size * 0.8;
         this.text.x = this.sphere.x;
         this.text.y = this.sphere.y - this.sphere.height * 0.43;
-        this.text.fontSize = size * 0.5;
+        this.text.fontSize = size * (this.isBent ? 0.5 : 0.5);
     };
     StrumSphere.prototype.toTop = function () {
         this.game.world.bringToTop(this.sphere);
@@ -177,7 +194,19 @@ var StrumSphere = (function () {
         this.text.visible = isVisible;
     };
     StrumSphere.colours = [
-        "grey", "red", "yellow", "green", "blue", "cyan", "orange", "magenta"
+        "black",
+        "grey",
+        "red",
+        "darkgreen",
+        "yellow",
+        "green",
+        "grey",
+        "blue",
+        "grey",
+        "cyan",
+        "brown",
+        "orange",
+        "magenta"
     ];
     return StrumSphere;
 }());
@@ -212,7 +241,6 @@ var Renderer = (function (_super) {
         for (var strum = 0; strum < this.bar.getStrumCount(); strum++) {
             var sInfo = this.bar.getStrum(strum);
             var frets = sInfo.getStrum();
-            console.log(frets);
             for (var stringID = 0; stringID < Configuration.strings; stringID++) {
                 if (frets[stringID] != Strum.NOSTRUM) {
                     var sm = new StrumSphere(this.game, stringID, frets[stringID]);
@@ -370,11 +398,13 @@ var Strum = (function () {
         this.startTime = startTime;
         this.bar = bar;
         this.strum = [];
+        def = def.toLowerCase();
         this.length = def.charCodeAt(Configuration.strings) - 96;
         for (var i = 0; i < Configuration.strings; i++) {
-            var fret = def.charAt(i) == "-" ? Strum.NOSTRUM : def.charCodeAt(i) - 48;
+            var fret = def.charAt(i) == "-" ? Strum.NOSTRUM : def.charCodeAt(i) - 97;
             this.strum.push(fret);
         }
+        console.log(this.strum, this.length, def, this.toString());
     }
     Strum.prototype.getStrum = function () {
         return this.strum;

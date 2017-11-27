@@ -5,15 +5,26 @@ class StrumSphere {
     private sphere:Phaser.Image;
     private text:Phaser.BitmapText;
     private game:Phaser.Game;
+    private isBent:boolean;
 
-    constructor(game:Phaser.Game,stringID:number,fretID:number) {
+    constructor(game:Phaser.Game,stringID:number,chrom:number) {
         this.game = game;
         this.stringID = stringID;
-        this.sphere = game.add.image(0,0,"sprites","sp"+StrumSphere.colours[fretID]);
+        this.sphere = game.add.image(0,0,"sprites","sp"+StrumSphere.colours[chrom % StrumSphere.colours.length]);
         this.sphere.anchor.x = 0.5;this.sphere.anchor.y = 1;
         this.sphere.width = this.sphere.height = 10;
-        this.text = game.add.bitmapText(0,0,"dfont",fretID.toString(),40);
+        var s:string = Configuration.instrument.mapOffsetToFret(chrom);
+        this.isBent = false;
+        if (s.charAt(s.length-1) == '^') {
+            this.isBent = true;
+            s = s.substr(0,s.length-1);
+        }
+        this.text = game.add.bitmapText(0,0,"dfont",s,10);
         this.text.anchor.x = 0.6;this.text.anchor.y = 0.5;
+        if (this.isBent) {
+
+            this.text.tint = 0xFF0000;
+        }
     }
 
     destroy(): void {
@@ -22,17 +33,30 @@ class StrumSphere {
     }
 
     private static colours:string[] = [
-        "grey","red","yellow","green","blue","cyan","orange","magenta"
+        "black",    // D/Open
+        "grey",     // D#
+        "red",      // E/1
+        "darkgreen",// F
+        "yellow",   // F#/2
+        "green",    // G/3
+        "grey",     // G#
+        "blue",     // A/4
+        "grey",     // A#
+        "cyan",     // B/5
+        "brown",    // C
+        "orange",   // C#/6
+        "magenta"   // D/7
     ];
 
     public setY(yPos:number):void {
         this.sphere.y = yPos;
         this.sphere.x = Background.x(this.stringID,this.sphere.y);
         var size:number = Background.size(this.sphere.y);
-        this.sphere.width = this.sphere.height = size * 0.7;
+        if (this.isBent) this.sphere.x += size/6;
+        this.sphere.width = this.sphere.height = size * 0.8;
         this.text.x = this.sphere.x;
         this.text.y = this.sphere.y - this.sphere.height * 0.43;
-        this.text.fontSize = size * 0.5;
+        this.text.fontSize = size * (this.isBent ? 0.5:0.5);
     }
 
     public toTop():void {
@@ -86,7 +110,6 @@ class Renderer extends Phaser.Group {
         for (var strum = 0;strum < this.bar.getStrumCount();strum++) {
             var sInfo:IStrum = this.bar.getStrum(strum);
             var frets:number[] = sInfo.getStrum();
-            console.log(frets);
             for (var stringID:number = 0;stringID < Configuration.strings;stringID++) {
                 if (frets[stringID] != Strum.NOSTRUM) {
                     var sm:StrumSphere = new StrumSphere(this.game,stringID,frets[stringID]);
