@@ -55,9 +55,6 @@ class BootState extends Phaser.State {
     preload() : void {
         // Load the loader image
         this.game.load.image("loader","assets/sprites/loader.png");
-        // Load the music file, so we can analyse it and only load the sounds needed.
-        var src:string = MerlinTrainerApplication.getURLName("music","music.json");
-        this.game.load.json("music",MerlinTrainerApplication.getURLName("music",src));        
         this.game.load.onLoadComplete.add(() => { this.game.state.start("Preload",true,false,1); },this);
     }
 

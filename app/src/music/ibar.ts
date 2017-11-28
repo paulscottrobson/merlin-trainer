@@ -42,4 +42,6 @@ interface IBar {
      * @memberof Music
      */
     toString():string;
+
+    scanNextStrum(currentStrum:IStrum):IStrum;        
 }

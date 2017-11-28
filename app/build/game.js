@@ -32,19 +32,23 @@ var MainState = (function (_super) {
     }
     MainState.prototype.init = function (music) {
         Configuration.initialise();
-        this.displayMusic = new Music(music);
+        var json1 = this.game.cache.getJSON("music");
+        this.displayMusic = new Music(json1);
         this.playMusic = this.displayMusic;
     };
     MainState.prototype.create = function () {
         this.background = new Background(this.game, this.displayMusic.getTitle());
         this.renderManager = new RenderManager(this.game, this.displayMusic);
         this.metronome = this.game.add.audio("metronome");
+        this.player = new Player(this.game);
+        this.chordBox = new ChordBox(this.game);
     };
     MainState.prototype.destroy = function () {
         this.displayMusic = this.playMusic = null;
         this.renderManager.destroy();
         this.background.destroy();
-        this.background = this.renderManager = null;
+        this.chordBox.destroy();
+        this.chordBox = this.background = this.renderManager = null;
     };
     MainState.prototype.update = function () {
         var elapsedMS = this.game.time.elapsedMS;
@@ -73,12 +77,24 @@ var MainState = (function (_super) {
     };
     MainState.prototype.actionStrum = function (strum) {
         var chrom = strum.getStrum();
+        var tuning = Configuration.instrument.getTuning();
         for (var n = 0; n < Configuration.strings; n++) {
             var s = "";
             if (chrom[n] != Strum.NOSTRUM) {
                 s = Configuration.instrument.mapOffsetToFret(chrom[n]);
+                var note = chrom[n] + tuning[n];
+                this.player.play(n, note);
             }
             this.background.setStringBoxText(n, s);
+        }
+        var chordStrum = strum.getNextChordChange();
+        if (chordStrum != null) {
+            console.log(chordStrum.getChordName());
+            this.chordBox.setState(chordStrum.getChordName(), chordStrum.getStrum());
+        }
+        else {
+            console.log(null);
+            this.chordBox.setState(null, null);
         }
     };
     MainState.VERSION = "0.01 26-Nov-17 Phaser-CE 2.8.7 (c) PSR 2017";
@@ -93,9 +109,13 @@ var Background = (function (_super) {
         var bgr = _this.game.add.image(0, 0, "sprites", "frame", _this);
         bgr.width = _this.game.width;
         bgr.height = _this.game.height;
+        var ttl = _this.game.add.image(0, 0, "sprites", "rectangle", _this);
+        ttl.width = _this.game.width;
+        ttl.height = 50;
+        ttl.tint = 0x0D76D9;
         var name = _this.game.add.bitmapText(_this.game.width / 4, 9, "font", title, 32, _this);
         name.anchor.x = 0.5;
-        name.tint = 0x063B6c;
+        name.tint = 0x063B6c * 0;
         var subBar = _this.game.add.image(_this.game.width / 2, 25, "sprites", "rectangle", _this);
         subBar.height = 40;
         subBar.width = _this.game.width / 2 - 10;
@@ -200,6 +220,42 @@ var Background = (function (_super) {
         return Background.x(2, yPixel) - Background.x(1, yPixel);
     };
     return Background;
+}(Phaser.Group));
+var ChordBox = (function (_super) {
+    __extends(ChordBox, _super);
+    function ChordBox(game) {
+        var _this = _super.call(this, game) || this;
+        _this.box = _this.game.add.image(10, 100, "sprites", "chordbox", _this);
+        _this.box.width = 90;
+        _this.box.height = _this.box.width * 2.5;
+        _this.label = _this.game.add.bitmapText(_this.box.x, _this.box.y, "font", "??", 40, _this);
+        _this.label.anchor.y = 1;
+        _this.buttons = [];
+        for (var n = 0; n < Configuration.strings; n++) {
+            _this.buttons[n] = _this.game.add.image(0, 0, "sprites", "chordfinger", _this);
+            _this.buttons[n].anchor.x = _this.buttons[n].anchor.y = 0.5;
+            _this.buttons[n].width = _this.buttons[n].height = _this.box.height / 8;
+        }
+        _this.setState(null, null);
+        return _this;
+    }
+    ChordBox.prototype.setState = function (label, chromatic) {
+        this.visible = (label != null);
+        var stc = Configuration.strings;
+        if (this.visible) {
+            this.label.text = label;
+            for (var s = 0; s < stc; s++) {
+                this.buttons[s].x = this.box.x + s * this.box.width / (stc - 1);
+                this.buttons[s].y = this.box.y + chromatic[s] * this.box.height / 12;
+            }
+        }
+    };
+    ChordBox.prototype.destroy = function () {
+        _super.prototype.destroy.call(this);
+        this.buttons = null;
+        this.box = this.label = null;
+    };
+    return ChordBox;
 }(Phaser.Group));
 var RenderManager = (function () {
     function RenderManager(game, music) {
@@ -404,6 +460,16 @@ var StrumSphere = (function () {
 }());
 var Merlin = (function () {
     function Merlin() {
+        this.chords = {};
+        var cList = Merlin.chordInfo.split(" ");
+        for (var _i = 0, cList_1 = cList; _i < cList_1.length; _i++) {
+            var c = cList_1[_i];
+            var name = c.split(":")[0].toLowerCase();
+            var finger = c.split(":")[1];
+            var reverse = finger.charAt(2) + finger.charAt(1) + finger.charAt(0);
+            this.chords[finger] = name;
+            this.chords[reverse] = name;
+        }
     }
     Merlin.prototype.getStringCount = function () {
         return 3;
@@ -417,10 +483,60 @@ var Merlin = (function () {
     Merlin.prototype.isDoubleString = function (stringID) {
         return (stringID == 2);
     };
+    Merlin.prototype.getChordName = function (chromOffset) {
+        var s = null;
+        var byName = "";
+        for (var _i = 0, chromOffset_1 = chromOffset; _i < chromOffset_1.length; _i++) {
+            var c = chromOffset_1[_i];
+            if (c == Strum.NOSTRUM) {
+                byName = byName + "-";
+            }
+            else {
+                byName = byName + this.mapOffsetToFret(c);
+            }
+        }
+        if (byName in this.chords) {
+            s = this.chords[byName];
+            s = s[0].toUpperCase() + s.substr(1).toLowerCase();
+        }
+        return s;
+    };
+    ;
     Merlin.fretMap = [
         "0", "0^", "1", "1^", "2", "3", "3^", "4", "4^", "5", "5^", "6", "7", "7^"
     ];
+    Merlin.chordInfo = "D:002 E:113 F#m:224 G:013 A:124 Bm:210 " +
+        "C#dim:123 D:234 Em:345 F#:456 G:335 A:446 Bm:550 C#dim:346 " +
+        "D5:000 E5:111 F#5:222 G5:333 A5:101 B5:212 C#5:323 " +
+        "Dmaj7:022 Em7:133 F#m7:244 Gmaj7:312 A7:423 Bm7:534 C#o:645";
     return Merlin;
+}());
+var Player = (function () {
+    function Player(game) {
+        this.notes = [];
+        this.current = [];
+        for (var i = 1; i <= Player.NOTE_COUNT; i++) {
+            this.notes[i] = game.add.audio(i.toString());
+        }
+        for (var i = 0; i < Configuration.strings; i++) {
+            this.current[i] = null;
+        }
+    }
+    Player.prototype.play = function (stringID, noteID) {
+        if (this.current[stringID] != null) {
+            this.current[stringID].stop();
+        }
+        this.current[stringID] = this.notes[noteID].play();
+    };
+    Player.preload = function (game) {
+        for (var n = 1; n <= Player.NOTE_COUNT; n++) {
+            var s = n.toString();
+            game.load.audio(s, ["assets/sounds/" + s + ".mp3",
+                "assets/sounds/" + s + ".ogg"]);
+        }
+    };
+    Player.NOTE_COUNT = 27;
+    return Player;
 }());
 var Bar = (function () {
     function Bar(def, music, barNumber) {
@@ -437,6 +553,15 @@ var Bar = (function () {
             }
         }
     }
+    Bar.prototype.scanNextStrum = function (currentStrum) {
+        for (var n = this.strums.length - 1; n >= 0; n--) {
+            this.strums[n].setNextChordChange(currentStrum);
+            if (this.strums[n].getChordName() != null) {
+                currentStrum = this.strums[n];
+            }
+        }
+        return currentStrum;
+    };
     Bar.prototype.getMusic = function () {
         return this.music;
     };
@@ -468,6 +593,10 @@ var Music = (function () {
         for (var _i = 0, _a = music.bars; _i < _a.length; _i++) {
             var b = _a[_i];
             this.bars.push(new Bar(b, this, this.bars.length));
+        }
+        var cLastStrum = null;
+        for (var n = this.bars.length - 1; n >= 0; n--) {
+            cLastStrum = this.bars[n].scanNextStrum(cLastStrum);
         }
     }
     Music.prototype.getDefaultTempo = function () {
@@ -506,6 +635,8 @@ var Strum = (function () {
             var fret = def.charAt(i) == "-" ? Strum.NOSTRUM : def.charCodeAt(i) - 97;
             this.strum.push(fret);
         }
+        this.chordName = Configuration.instrument.getChordName(this.strum);
+        this.nextChordChange = null;
     }
     Strum.prototype.getStrum = function () {
         return this.strum;
@@ -521,6 +652,15 @@ var Strum = (function () {
     };
     Strum.prototype.getBar = function () {
         return this.bar;
+    };
+    Strum.prototype.getChordName = function () {
+        return this.chordName;
+    };
+    Strum.prototype.setNextChordChange = function (s) {
+        this.nextChordChange = s;
+    };
+    Strum.prototype.getNextChordChange = function () {
+        return this.nextChordChange;
     };
     Strum.prototype.toString = function () {
         var s = "";
@@ -569,8 +709,6 @@ var BootState = (function (_super) {
     BootState.prototype.preload = function () {
         var _this = this;
         this.game.load.image("loader", "assets/sprites/loader.png");
-        var src = MerlinTrainerApplication.getURLName("music", "music.json");
-        this.game.load.json("music", MerlinTrainerApplication.getURLName("music", src));
         this.game.load.onLoadComplete.add(function () { _this.game.state.start("Preload", true, false, 1); }, this);
     };
     BootState.prototype.create = function () {
@@ -593,16 +731,18 @@ var PreloadState = (function (_super) {
         loader.height = this.game.height / 8;
         loader.anchor.setTo(0.5);
         this.game.load.setPreloadSprite(loader);
+        var src = MerlinTrainerApplication.getURLName("music", "music.json");
+        this.game.load.json("music", MerlinTrainerApplication.getURLName("music", src));
         this.game.load.json("sprites", "assets/sprites/sprites.json");
         this.game.load.atlas("sprites", "assets/sprites/sprites.png", "assets/sprites/sprites.json");
         for (var _i = 0, _a = ["dfont", "font"]; _i < _a.length; _i++) {
             var fontName = _a[_i];
             this.game.load.bitmapFont(fontName, "assets/fonts/" + fontName + ".png", "assets/fonts/" + fontName + ".fnt");
         }
-        var music = this.game.cache.getJSON("music");
+        Player.preload(this.game);
         this.game.load.audio("metronome", ["assets/sounds/metronome.mp3",
             "assets/sounds/metronome.ogg"]);
-        this.game.load.onLoadComplete.add(function () { _this.game.state.start("Main", true, false, music); }, this);
+        this.game.load.onLoadComplete.add(function () { _this.game.state.start("Main", true, false); }, this);
     };
     return PreloadState;
 }(Phaser.State));

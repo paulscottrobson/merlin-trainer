@@ -30,9 +30,13 @@ class Background extends Phaser.Group {
         var bgr:Phaser.Image = this.game.add.image(0,0,"sprites","frame",this);
         bgr.width = this.game.width;
         bgr.height= this.game.height;
+        // Top area
+        var ttl:Phaser.Image = this.game.add.image(0,0,"sprites","rectangle",this);
+        ttl.width = this.game.width;ttl.height = 50;
+        ttl.tint = 0x0D76D9;
         // Title
         var name:Phaser.BitmapText = this.game.add.bitmapText(this.game.width/4,9,"font",title,32,this);
-        name.anchor.x = 0.5;name.tint = 0x063B6c;
+        name.anchor.x = 0.5;name.tint = 0x063B6c*0;
         // Progress bar
         var subBar:Phaser.Image = this.game.add.image(this.game.width/2,25,"sprites","rectangle",this);
         subBar.height = 40;subBar.width = this.game.width/2 - 10;

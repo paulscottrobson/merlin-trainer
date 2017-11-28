@@ -21,6 +21,10 @@ class Music implements IMusic {
             this.bars.push(new Bar(b,this,this.bars.length));
         }
         //console.log(this.toString());
+        var cLastStrum:IStrum = null;
+        for (var n:number = this.bars.length-1;n >= 0;n--) {
+            cLastStrum = this.bars[n].scanNextStrum(cLastStrum);
+        }
     }
 
     getDefaultTempo(): number {

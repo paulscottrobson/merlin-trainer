@@ -13,6 +13,8 @@ class Strum implements IStrum {
     private length:number;
     private bar:IBar;
     public static NOSTRUM:number = -1;
+    private chordName:string;
+    private nextChordChange:IStrum;
 
     constructor(def:string,startTime:number,bar:IBar) {
         this.startTime = startTime;
@@ -24,6 +26,8 @@ class Strum implements IStrum {
             var fret = def.charAt(i) == "-" ? Strum.NOSTRUM : def.charCodeAt(i)-97;
             this.strum.push(fret);
         }
+        this.chordName = Configuration.instrument.getChordName(this.strum);    
+        this.nextChordChange = null;
         // console.log(this.strum,this.length,def,this.toString());
     }
     getStrum(): number[] {
@@ -40,6 +44,15 @@ class Strum implements IStrum {
     }
     getBar(): IBar {
         return this.bar;
+    }
+    getChordName(): string {
+        return this.chordName;
+    }
+    setNextChordChange(s:IStrum): void {
+        this.nextChordChange = s;
+    }
+    getNextChordChange(): IStrum {
+        return this.nextChordChange;
     }
     toString(): string {
         var s = "";

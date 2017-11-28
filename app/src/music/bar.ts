@@ -25,6 +25,17 @@ class Bar implements IBar {
             }
         }
     }
+
+    scanNextStrum(currentStrum:IStrum):IStrum {
+        for (var n:number = this.strums.length-1;n >= 0;n--) {
+            this.strums[n].setNextChordChange(currentStrum);
+            if (this.strums[n].getChordName() != null) {
+                currentStrum = this.strums[n];
+            }
+        }
+        return currentStrum;
+    }
+
     getMusic(): IMusic {
         return this.music;
     }

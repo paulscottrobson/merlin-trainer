@@ -53,7 +53,7 @@ for sid in range(1,5):
 		sc = 160 + x * 20
 		line(endx(x+sx,630),630,endx(x+sx,0),0,sc+sc*256+sc*65536+0xFF000000)
 
-draw.rectangle((0,0,600,50),fill=info)
+#draw.rectangle((0,0,600,50),fill=info)
 
 for x in range(50,200):
 	pass

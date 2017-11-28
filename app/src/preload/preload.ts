@@ -23,7 +23,9 @@ class PreloadState extends Phaser.State {
         loader.height = this.game.height / 8;        
         loader.anchor.setTo(0.5);
         this.game.load.setPreloadSprite(loader);
-
+        // Load the music file
+        var src:string = MerlinTrainerApplication.getURLName("music","music.json");
+        this.game.load.json("music",MerlinTrainerApplication.getURLName("music",src));        
         this.game.load.json("sprites","assets/sprites/sprites.json")    
         // Load the sprite atlas.
         this.game.load.atlas("sprites","assets/sprites/sprites.png",
@@ -33,14 +35,14 @@ class PreloadState extends Phaser.State {
             this.game.load.bitmapFont(fontName,"assets/fonts/"+fontName+".png",
                                                "assets/fonts/"+fontName+".fnt");
         }
-        // Create music, which is preloaded early.
-        var music:IMusic = this.game.cache.getJSON("music");
         // Load notes
+        Player.preload(this.game);
+
         // Load metronome sounds
         this.game.load.audio("metronome",["assets/sounds/metronome.mp3",
                                           "assets/sounds/metronome.ogg"]);        
 
         // Switch to game state when load complete.        
-        this.game.load.onLoadComplete.add(() => { this.game.state.start("Main",true,false,music); },this);
+        this.game.load.onLoadComplete.add(() => { this.game.state.start("Main",true,false); },this);
     }
 }

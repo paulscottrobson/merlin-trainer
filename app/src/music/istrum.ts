@@ -48,4 +48,15 @@ interface IStrum {
      * @memberof IStrum
      */
     toString():string;
+    /**
+     * Get name of associated chord
+     * 
+     * @returns {string} chord name, null if none.
+     * @memberof IStrum
+     */
+    getChordName():string;
+    
+    setNextChordChange(s:IStrum): void;
+    getNextChordChange(): IStrum;
+
 }

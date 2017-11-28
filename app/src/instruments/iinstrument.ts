@@ -31,5 +31,13 @@ interface IInstrument {
      * @memberof IInstrument
      */
     isDoubleString(stringID:number):boolean;
+    /**
+     * Get the chord, if any, corresponding to the given chromatic offsets.
+     * 
+     * @param {number[]} chromOffset 
+     * @returns {string} 
+     * @memberof IInstrument
+     */
+    getChordName(chromOffset:number[]):string;
 }
 
