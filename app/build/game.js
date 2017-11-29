@@ -37,7 +37,7 @@ var MainState = (function (_super) {
         this.playMusic = this.displayMusic;
     };
     MainState.prototype.create = function () {
-        this.background = new Background(this.game, this.displayMusic.getTitle());
+        this.background = new Background(this.game, this, this.displayMusic.getTitle(), this.displayMusic.getBarCount());
         this.renderManager = new RenderManager(this.game, this.displayMusic);
         this.metronome = this.game.add.audio("metronome");
         this.player = new Player(this.game);
@@ -75,6 +75,9 @@ var MainState = (function (_super) {
             }
         }
     };
+    MainState.prototype.setPosition = function (barPos) {
+        this.barPosition = barPos;
+    };
     MainState.prototype.actionStrum = function (strum) {
         var chrom = strum.getStrum();
         var tuning = Configuration.instrument.getTuning();
@@ -89,11 +92,9 @@ var MainState = (function (_super) {
         }
         var chordStrum = strum.getNextChordChange();
         if (chordStrum != null) {
-            console.log(chordStrum.getChordName());
             this.chordBox.setState(chordStrum.getChordName(), chordStrum.getStrum());
         }
         else {
-            console.log(null);
             this.chordBox.setState(null, null);
         }
     };
@@ -102,8 +103,10 @@ var MainState = (function (_super) {
 }(Phaser.State));
 var Background = (function (_super) {
     __extends(Background, _super);
-    function Background(game, title) {
+    function Background(game, state, title, barCount) {
         var _this = _super.call(this, game) || this;
+        _this.state = state;
+        _this.barCount = barCount;
         Background.width = game.width;
         Background.height = game.height;
         var bgr = _this.game.add.image(0, 0, "sprites", "frame", _this);
@@ -113,6 +116,8 @@ var Background = (function (_super) {
         ttl.width = _this.game.width;
         ttl.height = 50;
         ttl.tint = 0x0D76D9;
+        ttl.inputEnabled = true;
+        ttl.events.onInputDown.add(function () { this.setPosition(0); }, _this.state);
         var name = _this.game.add.bitmapText(_this.game.width / 4, 9, "font", title, 32, _this);
         name.anchor.x = 0.5;
         name.tint = 0x063B6c * 0;
@@ -121,6 +126,10 @@ var Background = (function (_super) {
         subBar.width = _this.game.width / 2 - 10;
         subBar.anchor.y = 0.5;
         subBar.tint = 0x063B6c;
+        subBar.inputEnabled = true;
+        subBar.events.onInputDown.add(function (p, q) {
+            this.setPosition((q.position.x - p.position.x) / p.width * barCount);
+        }, _this.state);
         _this.progress = _this.game.add.image(_this.game.width / 2 + 2, 25, "sprites", "rectangle", _this);
         _this.progress.height = 36;
         _this.maxWidth = subBar.width - 4;
@@ -164,13 +173,13 @@ var Background = (function (_super) {
     }
     Background.prototype.destroy = function () {
         _super.prototype.destroy.call(this);
-        this.progress = null;
+        this.state = this.progress = null;
         this.currNote = this.currNoteText = null;
     };
     Background.prototype.setStringBoxText = function (str, txt) {
         this.currNoteText[str].text = txt;
         if (txt != "") {
-            this.currNoteParticles[str].start(true, 800, null, 500);
+            this.currNoteParticles[str].start(true, 400, null, 250);
         }
     };
     Background.prototype.setProgress = function (percent) {
@@ -228,8 +237,9 @@ var ChordBox = (function (_super) {
         _this.box = _this.game.add.image(10, 100, "sprites", "chordbox", _this);
         _this.box.width = 90;
         _this.box.height = _this.box.width * 2.5;
-        _this.label = _this.game.add.bitmapText(_this.box.x, _this.box.y, "font", "??", 40, _this);
+        _this.label = _this.game.add.bitmapText(_this.box.x + _this.box.width / 2, _this.box.y, "dfont", "??", 40, _this);
         _this.label.anchor.y = 1;
+        _this.label.anchor.x = 0.5;
         _this.buttons = [];
         for (var n = 0; n < Configuration.strings; n++) {
             _this.buttons[n] = _this.game.add.image(0, 0, "sprites", "chordfinger", _this);
@@ -413,7 +423,7 @@ var StrumSphere = (function () {
             s = s.substr(0, s.length - 1);
         }
         this.text = game.add.bitmapText(0, 0, "dfont", s, 10);
-        this.text.anchor.x = 0.6;
+        this.text.anchor.x = 0.5;
         this.text.anchor.y = 0.5;
         if (this.isBent) {
             this.text.tint = 0xFF0000;
@@ -431,7 +441,7 @@ var StrumSphere = (function () {
         this.sphere.width = this.sphere.height = size * 0.7;
         this.text.x = this.sphere.x;
         this.text.y = this.sphere.y - this.sphere.height * 0.43;
-        this.text.fontSize = size * (this.isBent ? 0.5 : 0.5);
+        this.text.fontSize = size * (this.text.text.length > 1 ? 0.4 : 0.5);
     };
     StrumSphere.prototype.toTop = function () {
         this.game.world.bringToTop(this.sphere);
@@ -511,6 +521,20 @@ var Merlin = (function () {
         "Dmaj7:022 Em7:133 F#m7:244 Gmaj7:312 A7:423 Bm7:534 C#o:645";
     return Merlin;
 }());
+var Dulcimer = (function (_super) {
+    __extends(Dulcimer, _super);
+    function Dulcimer() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Dulcimer.prototype.mapOffsetToFret = function (fret) {
+        var s = _super.prototype.mapOffsetToFret.call(this, fret);
+        if (s.charAt(0) == '6') {
+            s = s.charAt(0) + "+" + s.substr(1);
+        }
+        return s;
+    };
+    return Dulcimer;
+}(Merlin));
 var Player = (function () {
     function Player(game) {
         this.notes = [];
@@ -538,6 +562,20 @@ var Player = (function () {
     Player.NOTE_COUNT = 27;
     return Player;
 }());
+var Strumstick = (function (_super) {
+    __extends(Strumstick, _super);
+    function Strumstick() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    Strumstick.prototype.mapOffsetToFret = function (fret) {
+        var s = _super.prototype.mapOffsetToFret.call(this, fret);
+        if (s.charAt(0) >= '6') {
+            s = (parseInt(s.charAt(0), 10) + 1) + s.substr(1);
+        }
+        return s;
+    };
+    return Strumstick;
+}(Merlin));
 var Bar = (function () {
     function Bar(def, music, barNumber) {
         this.music = music;

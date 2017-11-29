@@ -9,8 +9,8 @@ class ChordBox extends Phaser.Group {
         super(game);
         this.box = this.game.add.image(10,100,"sprites","chordbox",this);
         this.box.width = 90;this.box.height = this.box.width * 2.5;
-        this.label = this.game.add.bitmapText(this.box.x,this.box.y,"font","??",40,this);
-        this.label.anchor.y = 1;
+        this.label = this.game.add.bitmapText(this.box.x+this.box.width/2,this.box.y,"dfont","??",40,this);
+        this.label.anchor.y = 1;this.label.anchor.x = 0.5;
         this.buttons = [];
         for (var n = 0;n < Configuration.strings;n++) {
             this.buttons[n] = this.game.add.image(0,0,"sprites","chordfinger",this);

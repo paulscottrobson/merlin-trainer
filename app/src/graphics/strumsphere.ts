@@ -20,7 +20,7 @@ class StrumSphere {
             s = s.substr(0,s.length-1);
         }
         this.text = game.add.bitmapText(0,0,"dfont",s,10);
-        this.text.anchor.x = 0.6;this.text.anchor.y = 0.5;
+        this.text.anchor.x = 0.5;this.text.anchor.y = 0.5;
         if (this.isBent) {
 
             this.text.tint = 0xFF0000;
@@ -56,7 +56,7 @@ class StrumSphere {
         this.sphere.width = this.sphere.height = size * 0.7;
         this.text.x = this.sphere.x;
         this.text.y = this.sphere.y - this.sphere.height * 0.43;
-        this.text.fontSize = size * (this.isBent ? 0.5:0.5);
+        this.text.fontSize = size * (this.text.text.length > 1 ? 0.4:0.5);
     }
 
     public toTop():void {

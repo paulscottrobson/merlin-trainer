@@ -23,7 +23,8 @@ class MainState extends Phaser.State {
     }
 
     create() {    
-        this.background = new Background(this.game,this.displayMusic.getTitle());
+        this.background = new Background(this.game,this,
+                     this.displayMusic.getTitle(),this.displayMusic.getBarCount());
         this.renderManager = new RenderManager(this.game,this.displayMusic);
         this.metronome = this.game.add.audio("metronome");
         this.player = new Player(this.game);
@@ -72,6 +73,10 @@ class MainState extends Phaser.State {
         }
     }
 
+    setPosition(barPos:number): void {
+        this.barPosition = barPos;
+    }
+
     actionStrum(strum:IStrum):void {
         var chrom:number[] = strum.getStrum();
         var tuning:number[] = Configuration.instrument.getTuning();
@@ -87,10 +92,10 @@ class MainState extends Phaser.State {
         }
         var chordStrum:IStrum = strum.getNextChordChange();
         if (chordStrum != null) {
-            console.log(chordStrum.getChordName());             
+            //console.log(chordStrum.getChordName());             
             this.chordBox.setState(chordStrum.getChordName(),chordStrum.getStrum());
         } else {
-            console.log(null);
+            //console.log(null);
             this.chordBox.setState(null,null);
         }
     }

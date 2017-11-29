@@ -15,7 +15,9 @@ class Background extends Phaser.Group {
     private maxWidth:number;
     private static width:number;
     private static height:number;
-    
+    private state:MainState;
+    private barCount:number;
+
     /**
      * Create background.
      * 
@@ -23,8 +25,9 @@ class Background extends Phaser.Group {
      * @param {string} title 
      * @memberof Background
      */
-    constructor(game:Phaser.Game,title:string) {
+    constructor(game:Phaser.Game,state:MainState,title:string,barCount:number) {
         super(game);
+        this.state = state;this.barCount = barCount;
         // Background image
         Background.width = game.width;Background.height = game.height;
         var bgr:Phaser.Image = this.game.add.image(0,0,"sprites","frame",this);
@@ -34,6 +37,8 @@ class Background extends Phaser.Group {
         var ttl:Phaser.Image = this.game.add.image(0,0,"sprites","rectangle",this);
         ttl.width = this.game.width;ttl.height = 50;
         ttl.tint = 0x0D76D9;
+        ttl.inputEnabled = true;
+        ttl.events.onInputDown.add(function() { this.setPosition(0) },this.state);
         // Title
         var name:Phaser.BitmapText = this.game.add.bitmapText(this.game.width/4,9,"font",title,32,this);
         name.anchor.x = 0.5;name.tint = 0x063B6c*0;
@@ -41,6 +46,10 @@ class Background extends Phaser.Group {
         var subBar:Phaser.Image = this.game.add.image(this.game.width/2,25,"sprites","rectangle",this);
         subBar.height = 40;subBar.width = this.game.width/2 - 10;
         subBar.anchor.y = 0.5;subBar.tint = 0x063B6c;
+        subBar.inputEnabled = true;
+        subBar.events.onInputDown.add(function(p,q) { 
+            this.setPosition((q.position.x-p.position.x)/p.width*barCount); },
+        this.state);
         this.progress = this.game.add.image(this.game.width/2+2,25,"sprites","rectangle",this);
         this.progress.height = 36;this.maxWidth = subBar.width-4;
         this.progress.width = this.maxWidth / 2;
@@ -84,13 +93,13 @@ class Background extends Phaser.Group {
      */
     destroy(): void {
         super.destroy();
-        this.progress = null;this.currNote = this.currNoteText = null;
+        this.state = this.progress = null;this.currNote = this.currNoteText = null;
     }
 
     public setStringBoxText(str:number,txt:string) {
         this.currNoteText[str].text = txt;
         if (txt != "") {
-            this.currNoteParticles[str].start(true,800,null,500);            
+            this.currNoteParticles[str].start(true,400,null,250);            
         }
     }
     /**
