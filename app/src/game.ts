@@ -13,6 +13,7 @@ class MainState extends Phaser.State {
     private lastQBeat:number = -1;
     private metronome:Phaser.Sound;
     private chordBox:ChordBox;
+    private speedArrow:SpeedArrow;
 
     init(music:IMusic) {
 
@@ -29,6 +30,7 @@ class MainState extends Phaser.State {
         this.metronome = this.game.add.audio("metronome");
         this.player = new Player(this.game);
         this.chordBox = new ChordBox(this.game);
+        this.speedArrow = new SpeedArrow(this.game);
     }
     
     destroy() : void {
@@ -46,11 +48,15 @@ class MainState extends Phaser.State {
         var adj:number = this.displayMusic.getDefaultTempo();
         // Beats per second
         adj = adj / 60;
+        // Speed adjust
+        adj = adj * this.speedArrow.scalar();
         // Bars per second
         adj = adj / this.displayMusic.getBeats();
         this.barPosition = this.barPosition + elapsedMS * adj / 1000 * Configuration.speedScalar;
         // Move display.
         this.renderManager.moveTo(-this.barPosition);
+        // Update arrow
+        this.speedArrow.updateRotate(elapsedMS);
         // Update progress bar
         this.background.setProgress(100*this.barPosition / this.displayMusic.getBarCount());
         // Calc beat/qbeat position.

@@ -20,7 +20,7 @@ class StrumSphere {
             s = s.substr(0,s.length-1);
         }
         this.text = game.add.bitmapText(0,0,"dfont",s,10);
-        this.text.anchor.x = 0.5;this.text.anchor.y = 0.5;
+        this.text.anchor.x = 0.55;this.text.anchor.y = 0.5;
         if (this.isBent) {
 
             this.text.tint = 0xFF0000;

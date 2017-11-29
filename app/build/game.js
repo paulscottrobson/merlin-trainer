@@ -42,6 +42,7 @@ var MainState = (function (_super) {
         this.metronome = this.game.add.audio("metronome");
         this.player = new Player(this.game);
         this.chordBox = new ChordBox(this.game);
+        this.speedArrow = new SpeedArrow(this.game);
     };
     MainState.prototype.destroy = function () {
         this.displayMusic = this.playMusic = null;
@@ -54,9 +55,11 @@ var MainState = (function (_super) {
         var elapsedMS = this.game.time.elapsedMS;
         var adj = this.displayMusic.getDefaultTempo();
         adj = adj / 60;
+        adj = adj * this.speedArrow.scalar();
         adj = adj / this.displayMusic.getBeats();
         this.barPosition = this.barPosition + elapsedMS * adj / 1000 * Configuration.speedScalar;
         this.renderManager.moveTo(-this.barPosition);
+        this.speedArrow.updateRotate(elapsedMS);
         this.background.setProgress(100 * this.barPosition / this.displayMusic.getBarCount());
         var bar = Math.floor(this.barPosition);
         var qBeat = Math.floor((this.barPosition - bar) * 4 * this.displayMusic.getBeats());
@@ -234,10 +237,10 @@ var ChordBox = (function (_super) {
     __extends(ChordBox, _super);
     function ChordBox(game) {
         var _this = _super.call(this, game) || this;
-        _this.box = _this.game.add.image(10, 100, "sprites", "chordbox", _this);
+        _this.box = _this.game.add.image(10, 110, "sprites", "chordbox", _this);
         _this.box.width = 90;
         _this.box.height = _this.box.width * 2.5;
-        _this.label = _this.game.add.bitmapText(_this.box.x + _this.box.width / 2, _this.box.y, "dfont", "??", 40, _this);
+        _this.label = _this.game.add.bitmapText(_this.box.x + _this.box.width / 2, _this.box.y - 10, "dfont", "??", 40, _this);
         _this.label.anchor.y = 1;
         _this.label.anchor.x = 0.5;
         _this.buttons = [];
@@ -408,6 +411,48 @@ var Renderer = (function (_super) {
     };
     return Renderer;
 }(Phaser.Group));
+var SpeedArrow = (function (_super) {
+    __extends(SpeedArrow, _super);
+    function SpeedArrow(game) {
+        var _this = _super.call(this, game) || this;
+        _this.arrow = _this.game.add.image(0, 0, "sprites", "arrow", _this);
+        _this.arrow.width = _this.arrow.height = _this.game.width / 4;
+        _this.arrow.anchor.x = _this.arrow.anchor.y = 0.5;
+        _this.arrow.x = _this.game.width - 10 - _this.arrow.width / 2;
+        _this.arrow.y = 50 + 10 + _this.arrow.height / 2;
+        _this.arrow.inputEnabled = true;
+        _this.arrow.tint = 0xFF8000;
+        return _this;
+    }
+    SpeedArrow.prototype.destroy = function () {
+        _super.prototype.destroy.call(this);
+        this.arrow = null;
+    };
+    SpeedArrow.prototype.updateRotate = function (elapsedMS) {
+        var ptr = this.game.input.activePointer;
+        if (ptr.leftButton.isDown &&
+            Math.abs(ptr.x - this.arrow.x) < this.arrow.width / 2 &&
+            Math.abs(ptr.y - this.arrow.y) < this.arrow.height / 2) {
+            this.arrow.rotation = this.arrow.rotation + elapsedMS / 1000;
+            if (this.arrow.rotation >= 2 * Math.PI)
+                this.arrow.rotation -= 2 * Math.PI;
+            this.arrow.tint = (this.scalar() < 1 ? 0x0080F0 : 0x00FF00);
+            if (this.scalar() > 0.98 && this.scalar() < 1.02)
+                this.arrow.tint = 0xFF8000;
+        }
+    };
+    SpeedArrow.prototype.scalar = function () {
+        var n = (this.arrow.rotation - Math.PI) / Math.PI;
+        if (n < 0) {
+            n = 2 + n;
+        }
+        else {
+            n = n * 3 / 4 + 0.25;
+        }
+        return n;
+    };
+    return SpeedArrow;
+}(Phaser.Group));
 var StrumSphere = (function () {
     function StrumSphere(game, stringID, chrom) {
         this.game = game;
@@ -423,7 +468,7 @@ var StrumSphere = (function () {
             s = s.substr(0, s.length - 1);
         }
         this.text = game.add.bitmapText(0, 0, "dfont", s, 10);
-        this.text.anchor.x = 0.5;
+        this.text.anchor.x = 0.55;
         this.text.anchor.y = 0.5;
         if (this.isBent) {
             this.text.tint = 0xFF0000;
