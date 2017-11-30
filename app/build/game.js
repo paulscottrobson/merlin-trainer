@@ -513,10 +513,19 @@ var StrumSphere = (function () {
     ];
     return StrumSphere;
 }());
+var Chords = (function () {
+    function Chords() {
+    }
+    Chords.chordInfo = "D:002 E:113 F#m:224 G:013 A:124 Bm:210 C#dim:123 " +
+        "D:234 Em:345 F#:456 G:335 A:446 Bm:550 C#dim:346 " +
+        "D5:000 E5:111 F#5:222 G5:333 A5:101 B5:212 C#5:323 " +
+        "Dmaj7:022 Em7:133 F#m7:244 Gmaj7:312 A7:423 Bm7:534 C#o:645";
+    return Chords;
+}());
 var Merlin = (function () {
     function Merlin() {
         this.chords = {};
-        var cList = Merlin.chordInfo.split(" ");
+        var cList = Chords.chordInfo.split(" ");
         for (var _i = 0, cList_1 = cList; _i < cList_1.length; _i++) {
             var c = cList_1[_i];
             var name = c.split(":")[0].toLowerCase();
@@ -560,10 +569,6 @@ var Merlin = (function () {
     Merlin.fretMap = [
         "0", "0^", "1", "1^", "2", "3", "3^", "4", "4^", "5", "5^", "6", "7", "7^"
     ];
-    Merlin.chordInfo = "D:002 E:113 F#m:224 G:013 A:124 Bm:210 " +
-        "C#dim:123 D:234 Em:345 F#:456 G:335 A:446 Bm:550 C#dim:346 " +
-        "D5:000 E5:111 F#5:222 G5:333 A5:101 B5:212 C#5:323 " +
-        "Dmaj7:022 Em7:133 F#m7:244 Gmaj7:312 A7:423 Bm7:534 C#o:645";
     return Merlin;
 }());
 var Dulcimer = (function (_super) {

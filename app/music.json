@@ -1,15 +1,11 @@
 {
-    "title":"demo tune",
-    "beats":"4",
-    "tempo":"60",
-    "bars":[
-        "---a",
-        "abcd:defd:ghid:jkld",
-        "--mb:---d:aaad:-c-b",
-        "acfe:eehb",
-        "aaab:cccb",
-        "aaab:cccb",
-        "aaab:cccb",
-        ""
-    ]
+"beats":"4",
+"tempo":"80",
+"title":"",
+"bars":[
+    "aaab:---b:aaab:---b:aaab:---b:aaab:---b",
+    "acfb:---b:acfb:---b:heeb:---b:heeb:---b",
+    "heeb:---b:heeb:heeb:---b:heeb:heeb:heeb",
+    "heeb:---b:heeb:heeb:---b:heeb:heeb:heeb"
+]
 }
