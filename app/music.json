@@ -1,11 +1,22 @@
 {
-"beats":"4",
+"beats":"3",
 "tempo":"80",
 "title":"",
 "bars":[
-    "aaab:---b:aaab:---b:aaab:---b:aaab:---b",
-    "acfb:---b:acfb:---b:heeb:---b:heeb:---b",
-    "heeb:---b:heeb:heeb:---b:heeb:heeb:heeb",
-    "heeb:---b:heeb:heeb:---b:heeb:heeb:heeb"
+    "",
+    "aaeb:aaeb:---b:acfb:acfb:---b",
+    "aaeb:aaeb:---b:cehb:cehb:---b",
+    "aaeb:aaeb:---b:cehb:cehb:---b",
+    "aaeb:aaeb:---b:aaeb:aaeb:---b",
+    "aaeb:aaeb:---b:acfb:acfb:---b",
+    "aaeb:aaeb:---b:cehb:cehb:---b",
+    "aaeb:aaeb:---b:ccfb:ccfb:---b",
+    "aaeb:aaeb:---b:aaeb:aaeb:---b",
+    "ccfb:ccfb:---b:ccfb:ccfb:---b",
+    "cehb:cehb:---b:aaeb:aaeb:---b",
+    "ccfb:ccfb:---b:ccfb:ccfb:---b",
+    "aaeb:aaeb:---b:acfb:aaeb:---b",
+    "ccfb:ccfb:---b:ccfb:ccfb:---b",
+    "aaeb:aaeb:---b:aaeb:aaeb:---b"
 ]
 }

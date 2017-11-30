@@ -9,7 +9,7 @@ class Configuration {
      * @type {number}
      * @memberof Configuration
      */
-    public static barDepth:number = 400;
+    public static barDepth:number = 800;
     /**
      * Number of strings
      * 

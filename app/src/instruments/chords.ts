@@ -1,11 +1,3 @@
-// Will be auto generated.
-
 class Chords {
-
-   public static chordInfo:string = 
-       "D:002 E:113 F#m:224 G:013 A:124 Bm:210 C#dim:123 "+ 
-       "D:234 Em:345 F#:456 G:335 A:446 Bm:550 C#dim:346 "+
-       "D5:000 E5:111 F#5:222 G5:333 A5:101 B5:212 C#5:323 "+
-       "Dmaj7:022 Em7:133 F#m7:244 Gmaj7:312 A7:423 Bm7:534 C#o:645"; 
-
+public static chordInfo:string = "d:002 em:113 f#m:224 g:013 a:124 bm:210 c#dim:123 d:234 em:345 f#:456 g:335 a:446 bm:550 c#dim:346 d5:000 e5:111 f#5:222 g5:333 a5:101 b5:212 c#5:323 dmaj7:022 em7:133 f#m7:244 gmaj7:312 a7:423 bm7:534 c#o:645";
 }

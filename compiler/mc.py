@@ -15,6 +15,7 @@ import re
 # ***************************************************************************************
 class Strum:
 	def __init__(self,fretting,qbLength):
+		self.createChordLookup()
 		self.loadFretting(fretting.lower() if fretting != "&" else "xxx")
 		self.qbLength = qbLength
 		self.mapping = [0,2,4,5,7,9,11,12]
@@ -29,6 +30,11 @@ class Strum:
 	#
 	def loadFretting(self,fretting):
 		self.fretting = []
+		if re.match("^[0-7\+x]*$",fretting) is None:
+			if fretting not in self.chordLookup:
+				raise Exception("Unknown chord/fretting "+fretting)
+			fretting = self.chordLookup[fretting]
+
 		pendingBend = False
 		for c in fretting:
 			if c >= "0" and c <= "7":
@@ -53,7 +59,33 @@ class Strum:
 			code = code if f is None or f == int(f) else chr(ord(code) + 1)
 			render = render + code
 		return render + chr(self.qbLength+96)
+	#
+	#	Create chord lookup
+	#
+	def createChordLookup(self):
+		if Strum.chordLookup is None:
+			chords = Strum.chordInfo.lower().replace("\t"," ").replace("\n"," ").split(" ")
+			chords = [x.strip() for x in chords if x.strip() != ""]
+			Strum.chordLookup = {}
+			for c in chords:
+				parts = [x.strip() for x in c.split(":")]
+				if parts[0] not in Strum.chordLookup:
+					print(parts)
+					frets = [c for c in parts[1]]
+					frets.reverse()
+					Strum.chordLookup[parts[0]] = "".join(frets)
+			h = open("/tmp/chords.ts","w")
+			h.write("class Chords {\npublic static chordInfo:string = ")
+			h.write('"'+" ".join(chords)+'";\n}\n')
+			h.close()
+Strum.chordLookup = None 
 
+Strum.chordInfo = """
+       D:002 Em:113 F#m:224 G:013 A:124 Bm:210 C#dim:123 
+       D:234 Em:345 F#:456 G:335 A:446 Bm:550 C#dim:346 
+       D5:000 E5:111 F#5:222 G5:333 A5:101 B5:212 C#5:323 
+       Dmaj7:022 Em7:133 F#m7:244 Gmaj7:312 A7:423 Bm7:534 C#o:645
+"""       
 # ***************************************************************************************
 #
 #						Represents a single compiled song
@@ -188,7 +220,7 @@ class Compiler:
 	#
 	def compileChordInfo(self,desc):
 		desc = desc if desc.find("@") >= 0 else desc[:-1]+"@1"+"]"
-		m = re.match("^\[([0-9x\&\+]+)\@(\d)\]$",desc)
+		m = re.match("^\[([0-9xma-g\#\&\+]+)\@(\d)\]$",desc)
 		if m is None:
 			raise Exception("Can't fathom chord "+desc)
 		for p in range(int(m.group(2))-1,len(self.chordInfo)):
@@ -210,10 +242,7 @@ cm.compile("demo.merlin")
 open("../app/music.json","w").write(cm.tuneMusic.render())
 open("../app/music.json","w").write(cm.chordMusic.render())
 
-
-
 # TODO:
 # 	Get the title when rendering
-# 	Chord dictionary.
 # 	Put tune and chords seperately in player
 #	Try a real song.
