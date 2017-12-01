@@ -28,13 +28,19 @@ var MainState = (function (_super) {
         _this.barPosition = 0;
         _this.lastBar = -1;
         _this.lastQBeat = -1;
+        _this.loopPoint = 0;
+        _this.displayNext = false;
         return _this;
     }
     MainState.prototype.init = function (music) {
         Configuration.initialise();
-        var json1 = this.game.cache.getJSON("music");
+        var json1 = this.game.cache.getJSON("music_display");
         this.displayMusic = new Music(json1);
         this.playMusic = this.displayMusic;
+        if (BootState.differentBacktrack()) {
+            var json2 = this.game.cache.getJSON("music_play");
+            this.playMusic = new Music(json2);
+        }
     };
     MainState.prototype.create = function () {
         this.background = new Background(this.game, this, this.displayMusic.getTitle(), this.displayMusic.getBarCount());
@@ -73,15 +79,25 @@ var MainState = (function (_super) {
             var cBar = this.playMusic.getBar(bar);
             for (var n = 0; n < cBar.getStrumCount(); n++) {
                 if (cBar.getStrum(n).getStartTime() == qBeat) {
-                    this.actionStrum(cBar.getStrum(n));
+                    this.actionPlayStrum(cBar.getStrum(n));
+                }
+            }
+            var cBar2 = this.displayMusic.getBar(bar);
+            for (var n = 0; n < cBar2.getStrumCount(); n++) {
+                if (cBar2.getStrum(n).getStartTime() == qBeat) {
+                    this.actionDisplayStrum(cBar2.getStrum(n));
                 }
             }
         }
     };
-    MainState.prototype.setPosition = function (barPos) {
-        this.barPosition = barPos;
+    MainState.prototype.goLoopPosition = function () {
+        this.barPosition = this.loopPoint;
     };
-    MainState.prototype.actionStrum = function (strum) {
+    MainState.prototype.setLoopPosition = function (barPos) {
+        this.barPosition = barPos;
+        this.loopPoint = barPos;
+    };
+    MainState.prototype.actionPlayStrum = function (strum) {
         var chrom = strum.getStrum();
         var tuning = Configuration.instrument.getTuning();
         for (var n = 0; n < Configuration.strings; n++) {
@@ -91,14 +107,32 @@ var MainState = (function (_super) {
                 var note = chrom[n] + tuning[n];
                 this.player.play(n, note);
             }
+        }
+    };
+    MainState.prototype.actionDisplayStrum = function (strum) {
+        var chrom = strum.getStrum();
+        var tuning = Configuration.instrument.getTuning();
+        for (var n = 0; n < Configuration.strings; n++) {
+            var s = "";
+            if (chrom[n] != Strum.NOSTRUM) {
+                s = Configuration.instrument.mapOffsetToFret(chrom[n]);
+            }
             this.background.setStringBoxText(n, s);
         }
-        var chordStrum = strum.getNextChordChange();
-        if (chordStrum != null) {
-            this.chordBox.setState(chordStrum.getChordName(), chordStrum.getStrum());
+        if (this.displayNext) {
+            var chordStrum = strum.getNextChordChange();
+            if (chordStrum != null) {
+                this.chordBox.setState(chordStrum.getChordName(), chordStrum.getStrum());
+            }
+            else {
+                this.chordBox.setState(null, null);
+            }
         }
         else {
-            this.chordBox.setState(null, null);
+            var chordName = strum.getChordName();
+            if (chordName != null) {
+                this.chordBox.setState(chordName, strum.getStrum());
+            }
         }
     };
     MainState.VERSION = "0.01 26-Nov-17 Phaser-CE 2.8.7 (c) PSR 2017";
@@ -115,12 +149,14 @@ var Background = (function (_super) {
         var bgr = _this.game.add.image(0, 0, "sprites", "frame", _this);
         bgr.width = _this.game.width;
         bgr.height = _this.game.height;
+        bgr.inputEnabled = true;
+        bgr.events.onInputDown.add(function () { this.goLoopPosition(); }, _this.state);
         var ttl = _this.game.add.image(0, 0, "sprites", "rectangle", _this);
         ttl.width = _this.game.width;
         ttl.height = 50;
         ttl.tint = 0x0D76D9;
         ttl.inputEnabled = true;
-        ttl.events.onInputDown.add(function () { this.setPosition(0); }, _this.state);
+        ttl.events.onInputDown.add(function () { this.setLoopPosition(0); }, _this.state);
         var name = _this.game.add.bitmapText(_this.game.width / 4, 9, "font", title, 32, _this);
         name.anchor.x = 0.5;
         name.tint = 0x063B6c * 0;
@@ -131,7 +167,7 @@ var Background = (function (_super) {
         subBar.tint = 0x063B6c;
         subBar.inputEnabled = true;
         subBar.events.onInputDown.add(function (p, q) {
-            this.setPosition((q.position.x - p.position.x) / p.width * barCount);
+            this.setLoopPosition((q.position.x - p.position.x) / p.width * barCount);
         }, _this.state);
         _this.progress = _this.game.add.image(_this.game.width / 2 + 2, 25, "sprites", "rectangle", _this);
         _this.progress.height = 36;
@@ -237,7 +273,7 @@ var ChordBox = (function (_super) {
     __extends(ChordBox, _super);
     function ChordBox(game) {
         var _this = _super.call(this, game) || this;
-        _this.box = _this.game.add.image(10, 110, "sprites", "chordbox", _this);
+        _this.box = _this.game.add.image(20, 110, "sprites", "chordbox", _this);
         _this.box.width = 90;
         _this.box.height = _this.box.width * 2.5;
         _this.label = _this.game.add.bitmapText(_this.box.x + _this.box.width / 2, _this.box.y - 10, "dfont", "??", 40, _this);
@@ -516,7 +552,7 @@ var StrumSphere = (function () {
 var Chords = (function () {
     function Chords() {
     }
-    Chords.chordInfo = "d:002 em:113 f#m:224 g:013 a:124 bm:210 c#dim:123 d:234 em:345 f#:456 g:335 a:446 bm:550 c#dim:346 d5:000 e5:111 f#5:222 g5:333 a5:101 b5:212 c#5:323 dmaj7:022 em7:133 f#m7:244 gmaj7:312 a7:423 bm7:534 c#o:645";
+    Chords.chordInfo = "d:002 em:113 f#m:224 g:013 a:101 bm:210 c#dim:123 d:234 em:345 f#:456 g:335 a:446 bm:550 c#dim:346 d5:000 e5:111 f#5:222 g5:333 a5:101 b5:212 c#5:323 dmaj7:022 em7:133 f#m7:244 gmaj7:312 a7:423 bm7:534 c#o:645";
     return Chords;
 }());
 var Merlin = (function () {
@@ -553,10 +589,10 @@ var Merlin = (function () {
                 byName = byName + "-";
             }
             else {
-                byName = byName + this.mapOffsetToFret(c);
+                byName = byName + this.mapOffsetToFret(c).toString();
             }
         }
-        if (byName in this.chords) {
+        if (this.chords[byName] != undefined) {
             s = this.chords[byName];
             s = s[0].toUpperCase() + s.substr(1).toLowerCase();
         }
@@ -794,7 +830,18 @@ var BootState = (function (_super) {
     BootState.prototype.preload = function () {
         var _this = this;
         this.game.load.image("loader", "assets/sprites/loader.png");
+        BootState.displayName =
+            MerlinTrainerApplication.getURLName("music", "music.json");
+        BootState.playName =
+            MerlinTrainerApplication.getURLName("play", BootState.displayName);
+        this.game.load.json("music_display", BootState.displayName);
+        this.game.load.json("music_play", BootState.playName);
+        console.log(BootState.displayName);
+        console.log(BootState.playName);
         this.game.load.onLoadComplete.add(function () { _this.game.state.start("Preload", true, false, 1); }, this);
+    };
+    BootState.differentBacktrack = function () {
+        return BootState.playName != BootState.displayName;
     };
     BootState.prototype.create = function () {
         this.game.scale.pageAlignHorizontally = true;
@@ -816,9 +863,6 @@ var PreloadState = (function (_super) {
         loader.height = this.game.height / 8;
         loader.anchor.setTo(0.5);
         this.game.load.setPreloadSprite(loader);
-        var src = MerlinTrainerApplication.getURLName("music", "music.json");
-        this.game.load.json("music", MerlinTrainerApplication.getURLName("music", src));
-        this.game.load.json("sprites", "assets/sprites/sprites.json");
         this.game.load.atlas("sprites", "assets/sprites/sprites.png", "assets/sprites/sprites.json");
         for (var _i = 0, _a = ["dfont", "font"]; _i < _a.length; _i++) {
             var fontName = _a[_i];

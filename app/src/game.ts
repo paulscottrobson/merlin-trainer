@@ -14,13 +14,20 @@ class MainState extends Phaser.State {
     private metronome:Phaser.Sound;
     private chordBox:ChordBox;
     private speedArrow:SpeedArrow;
+    private loopPoint:number = 0;
+    private displayNext:boolean = false;
 
     init(music:IMusic) {
 
         Configuration.initialise();
-        var json1:any = this.game.cache.getJSON("music");
+        var json1:any = this.game.cache.getJSON("music_display");
         this.displayMusic = new Music(json1);
         this.playMusic = this.displayMusic;
+        if (BootState.differentBacktrack()) {
+            var json2:any = this.game.cache.getJSON("music_play");
+            this.playMusic = new Music(json2);
+        }
+
     }
 
     create() {    
@@ -73,17 +80,28 @@ class MainState extends Phaser.State {
             var cBar:IBar = this.playMusic.getBar(bar);
             for (var n:number = 0;n < cBar.getStrumCount();n++) {
                 if (cBar.getStrum(n).getStartTime() == qBeat) {
-                    this.actionStrum(cBar.getStrum(n));
+                    this.actionPlayStrum(cBar.getStrum(n));
+                }
+            } 
+            var cBar2:IBar = this.displayMusic.getBar(bar);
+            for (var n:number = 0;n < cBar2.getStrumCount();n++) {
+                if (cBar2.getStrum(n).getStartTime() == qBeat) {
+                    this.actionDisplayStrum(cBar2.getStrum(n));
                 }
             } 
         }
     }
 
-    setPosition(barPos:number): void {
-        this.barPosition = barPos;
+    goLoopPosition(): void {
+        this.barPosition = this.loopPoint;
     }
 
-    actionStrum(strum:IStrum):void {
+    setLoopPosition(barPos:number): void {
+        this.barPosition = barPos;
+        this.loopPoint = barPos;
+    }
+
+    actionPlayStrum(strum:IStrum):void {
         var chrom:number[] = strum.getStrum();
         var tuning:number[] = Configuration.instrument.getTuning();
         for (var n:number = 0;n < Configuration.strings;n++) {
@@ -94,15 +112,33 @@ class MainState extends Phaser.State {
                 //console.log(n,note,tuning[n],chrom[n]);
                 this.player.play(n,note);
             }
+        }
+    }
+
+    actionDisplayStrum(strum:IStrum): void {
+        var chrom:number[] = strum.getStrum();
+        var tuning:number[] = Configuration.instrument.getTuning();
+        for (var n:number = 0;n < Configuration.strings;n++) {
+            var s:string = "";
+            if (chrom[n] != Strum.NOSTRUM) {
+                s = Configuration.instrument.mapOffsetToFret(chrom[n]);
+            }
             this.background.setStringBoxText(n,s);
         }
-        var chordStrum:IStrum = strum.getNextChordChange();
-        if (chordStrum != null) {
-            //console.log(chordStrum.getChordName());             
-            this.chordBox.setState(chordStrum.getChordName(),chordStrum.getStrum());
+        if (this.displayNext) {
+            var chordStrum:IStrum = strum.getNextChordChange();
+            if (chordStrum != null) {
+                //console.log(chordStrum.getChordName());             
+                this.chordBox.setState(chordStrum.getChordName(),chordStrum.getStrum());
+            } else {
+                //console.log(null);
+                this.chordBox.setState(null,null);
+            }
         } else {
-            //console.log(null);
-            this.chordBox.setState(null,null);
+            var chordName:string = strum.getChordName();
+            if (chordName != null) {
+                this.chordBox.setState(chordName,strum.getStrum());
+            }
         }
     }
 }    

@@ -25,10 +25,11 @@ class Strum implements IStrum {
         for (var i = 0;i < Configuration.strings;i++) {
             var fret = def.charAt(i) == "-" ? Strum.NOSTRUM : def.charCodeAt(i)-97;
             this.strum.push(fret);
-        }
+        }        
         this.chordName = Configuration.instrument.getChordName(this.strum);    
+        //console.log(this.strum,this.chordName);
         this.nextChordChange = null;
-        // console.log(this.strum,this.length,def,this.toString());
+        //console.log(this.strum,this.length,def,this.toString());
     }
     getStrum(): number[] {
         return this.strum;

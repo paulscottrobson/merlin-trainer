@@ -7,7 +7,7 @@ class ChordBox extends Phaser.Group {
 
     constructor(game:Phaser.Game) {
         super(game);
-        this.box = this.game.add.image(10,110,"sprites","chordbox",this);
+        this.box = this.game.add.image(20,110,"sprites","chordbox",this);
         this.box.width = 90;this.box.height = this.box.width * 2.5;
         this.label = this.game.add.bitmapText(this.box.x+this.box.width/2,this.box.y-10,"dfont","??",40,this);
         this.label.anchor.y = 1;this.label.anchor.x = 0.5;

@@ -52,12 +52,32 @@ class MerlinTrainerApplication extends Phaser.Game {
  * Boot state. Preloads loader image, sets up display.
  */
 class BootState extends Phaser.State {
+
+    private static playName:string;
+    private static displayName:string;
+
     preload() : void {
         // Load the loader image
         this.game.load.image("loader","assets/sprites/loader.png");
+        // Identify the music that is displayed (key::music)
+        BootState.displayName =
+            MerlinTrainerApplication.getURLName("music","music.json");
+        // Identify the music that is player (key:Play)
+        BootState.playName = 
+            MerlinTrainerApplication.getURLName("play",BootState.displayName);
+          
+        // Load the music files
+        this.game.load.json("music_display",BootState.displayName);
+        this.game.load.json("music_play",BootState.playName);
+        console.log(BootState.displayName);
+        console.log(BootState.playName);
         this.game.load.onLoadComplete.add(() => { this.game.state.start("Preload",true,false,1); },this);
     }
 
+    static differentBacktrack():boolean {
+        return BootState.playName != BootState.displayName;
+    }
+    
     create() : void {        
         // Make the game window fit the display area. Doesn't work in the Game constructor.
         this.game.scale.pageAlignHorizontally = true;

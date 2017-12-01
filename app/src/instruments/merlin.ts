@@ -36,10 +36,10 @@ class Merlin implements IInstrument {
             if (c == Strum.NOSTRUM) {
                 byName = byName + "-";
             } else {
-                byName = byName + this.mapOffsetToFret(c);
+                byName = byName + this.mapOffsetToFret(c).toString();
             }
         }
-        if (byName in this.chords) {
+        if (this.chords[byName] != undefined) {
             s = this.chords[byName];
             s = s[0].toUpperCase()+s.substr(1).toLowerCase();
         }

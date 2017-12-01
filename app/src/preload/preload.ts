@@ -23,10 +23,7 @@ class PreloadState extends Phaser.State {
         loader.height = this.game.height / 8;        
         loader.anchor.setTo(0.5);
         this.game.load.setPreloadSprite(loader);
-        // Load the music file
-        var src:string = MerlinTrainerApplication.getURLName("music","music.json");
-        this.game.load.json("music",MerlinTrainerApplication.getURLName("music",src));        
-        this.game.load.json("sprites","assets/sprites/sprites.json")    
+        //this.game.load.json("sprites","assets/sprites/sprites.json")    
         // Load the sprite atlas.
         this.game.load.atlas("sprites","assets/sprites/sprites.png",
                                        "assets/sprites/sprites.json");

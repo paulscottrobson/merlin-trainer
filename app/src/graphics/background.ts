@@ -33,12 +33,15 @@ class Background extends Phaser.Group {
         var bgr:Phaser.Image = this.game.add.image(0,0,"sprites","frame",this);
         bgr.width = this.game.width;
         bgr.height= this.game.height;
+        bgr.inputEnabled = true;
+        bgr.events.onInputDown.add(function() { this.goLoopPosition() },this.state);
+        
         // Top area
         var ttl:Phaser.Image = this.game.add.image(0,0,"sprites","rectangle",this);
         ttl.width = this.game.width;ttl.height = 50;
         ttl.tint = 0x0D76D9;
         ttl.inputEnabled = true;
-        ttl.events.onInputDown.add(function() { this.setPosition(0) },this.state);
+        ttl.events.onInputDown.add(function() { this.setLoopPosition(0) },this.state);
         // Title
         var name:Phaser.BitmapText = this.game.add.bitmapText(this.game.width/4,9,"font",title,32,this);
         name.anchor.x = 0.5;name.tint = 0x063B6c*0;
@@ -48,7 +51,7 @@ class Background extends Phaser.Group {
         subBar.anchor.y = 0.5;subBar.tint = 0x063B6c;
         subBar.inputEnabled = true;
         subBar.events.onInputDown.add(function(p,q) { 
-            this.setPosition((q.position.x-p.position.x)/p.width*barCount); },
+            this.setLoopPosition((q.position.x-p.position.x)/p.width*barCount); },
         this.state);
         this.progress = this.game.add.image(this.game.width/2+2,25,"sprites","rectangle",this);
         this.progress.height = 36;this.maxWidth = subBar.width-4;

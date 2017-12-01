@@ -70,7 +70,7 @@ class Strum:
 			for c in chords:
 				parts = [x.strip() for x in c.split(":")]
 				if parts[0] not in Strum.chordLookup:
-					print(parts)
+					#print(parts)
 					frets = [c for c in parts[1]]
 					frets.reverse()
 					Strum.chordLookup[parts[0]] = "".join(frets)
@@ -81,7 +81,7 @@ class Strum:
 Strum.chordLookup = None 
 
 Strum.chordInfo = """
-       D:002 Em:113 F#m:224 G:013 A:124 Bm:210 C#dim:123 
+       D:002 Em:113 F#m:224 G:013 A:101 Bm:210 C#dim:123 
        D:234 Em:345 F#:456 G:335 A:446 Bm:550 C#dim:346 
        D5:000 E5:111 F#5:222 G5:333 A5:101 B5:212 C#5:323 
        Dmaj7:022 Em7:133 F#m7:244 Gmaj7:312 A7:423 Bm7:534 C#o:645
@@ -239,8 +239,8 @@ class Compiler:
 cm = Compiler()
 cm.compile("demo.merlin")
 
-open("../app/music.json","w").write(cm.tuneMusic.render())
-open("../app/music.json","w").write(cm.chordMusic.render())
+open("../app/music_t.json","w").write(cm.tuneMusic.render())
+open("../app/music_c.json","w").write(cm.chordMusic.render())
 
 # TODO:
 # 	Get the title when rendering
