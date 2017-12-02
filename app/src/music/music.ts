@@ -11,12 +11,15 @@ class Music implements IMusic {
     private tempo:number;
     private name:string;
     private bars:IBar[];
+    private isSimplified:boolean;
+    private useDrone:boolean;
 
     constructor(music:any) {
         this.beats = parseInt(music.beats,10);
         this.tempo = parseInt(music.tempo,10);
         this.name = music.title;
         this.bars = [];
+        this.isSimplified = false;
         for (var b of music.bars) {
             this.bars.push(new Bar(b,this,this.bars.length));
         }
@@ -27,6 +30,19 @@ class Music implements IMusic {
         }
     }
 
+    setSimplify(simplify:boolean,useDrone:boolean): void {
+        this.isSimplified = simplify;
+        this.useDrone = useDrone;
+    }
+
+    getSimplify(): boolean {
+        return this.isSimplified;
+    }
+
+    getDroneUse(): boolean {
+        return this.useDrone;
+    }
+    
     getDefaultTempo(): number {
         return this.tempo;
     }

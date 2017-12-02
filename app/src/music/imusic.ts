@@ -42,6 +42,11 @@ interface IMusic {
      * @memberof Music
      */
     getBar(barNumber:number):IBar;
+
+    setSimplify(simplify:boolean,useDrone:boolean);
+    getSimplify(): boolean;
+    getDroneUse(): boolean;
+
     /**
      * Convert to a string.
      * 

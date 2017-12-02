@@ -18,6 +18,7 @@ class MainState extends Phaser.State {
     private speedArrow:SpeedArrow;
     private loopPoint:number = 0;
     private displayNext:boolean = false;
+    private playStyle = 0;
 
     init(music:IMusic) {
 
@@ -27,6 +28,7 @@ class MainState extends Phaser.State {
         this.playMusic = this.displayMusic = this.melodyMusic;
         if (BootState.differentBacktrack()) {
             var json2:any = this.game.cache.getJSON("music_chords");
+            this.chordMusic = new Music(json2);
         }
 
     }
@@ -34,11 +36,11 @@ class MainState extends Phaser.State {
     create() {    
         this.background = new Background(this.game,this,
                      this.displayMusic.getTitle(),this.displayMusic.getBarCount());
-        this.renderManager = new RenderManager(this.game,this.displayMusic);
         this.metronome = this.game.add.audio("metronome");
         this.player = new Player(this.game);
         this.chordBox = new ChordBox(this.game);
         this.speedArrow = new SpeedArrow(this.game);
+        this.restart();
     }
     
     destroy() : void {
@@ -47,6 +49,34 @@ class MainState extends Phaser.State {
         this.background.destroy();
         this.chordBox.destroy();
         this.chordBox = this.background = this.renderManager = null;
+    }
+
+    nextPlayStyle(): void {
+        this.playStyle += 1;
+        // Styles: 0 M/M 1 S 2 SD 3 M/C 4 C/M 5 C/C
+        if (this.playStyle == 6) this.playStyle = 0;
+        if (!BootState.differentBacktrack() && this.playStyle ==3) this.playStyle = 0;
+        //console.log(this.playStyle);
+        this.restart();
+    }
+
+    restart(): void {
+        if (this.renderManager != null) {
+            this.renderManager.destroy();
+        }
+        this.displayMusic = this.playMusic = this.melodyMusic;
+        if (this.playStyle >= 4) this.displayMusic = this.chordMusic;
+        if (this.playStyle == 3 || this.playStyle == 5) {
+            this.playMusic = this.chordMusic;
+        }
+        this.displayMusic.setSimplify(false,false);
+        this.playMusic.setSimplify(false,false);
+        if (this.playStyle == 1 || this.playStyle == 2) {
+            this.displayMusic.setSimplify(true,this.playStyle == 2);
+            this.playMusic.setSimplify(true,this.playStyle == 2);
+        }
+        this.renderManager = new RenderManager(this.game,this.displayMusic);       
+        this.barPosition = 0;
     }
 
     update() : void {

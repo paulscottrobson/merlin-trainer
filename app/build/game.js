@@ -30,6 +30,7 @@ var MainState = (function (_super) {
         _this.lastQBeat = -1;
         _this.loopPoint = 0;
         _this.displayNext = false;
+        _this.playStyle = 0;
         return _this;
     }
     MainState.prototype.init = function (music) {
@@ -39,15 +40,16 @@ var MainState = (function (_super) {
         this.playMusic = this.displayMusic = this.melodyMusic;
         if (BootState.differentBacktrack()) {
             var json2 = this.game.cache.getJSON("music_chords");
+            this.chordMusic = new Music(json2);
         }
     };
     MainState.prototype.create = function () {
         this.background = new Background(this.game, this, this.displayMusic.getTitle(), this.displayMusic.getBarCount());
-        this.renderManager = new RenderManager(this.game, this.displayMusic);
         this.metronome = this.game.add.audio("metronome");
         this.player = new Player(this.game);
         this.chordBox = new ChordBox(this.game);
         this.speedArrow = new SpeedArrow(this.game);
+        this.restart();
     };
     MainState.prototype.destroy = function () {
         this.displayMusic = this.playMusic = null;
@@ -55,6 +57,33 @@ var MainState = (function (_super) {
         this.background.destroy();
         this.chordBox.destroy();
         this.chordBox = this.background = this.renderManager = null;
+    };
+    MainState.prototype.nextPlayStyle = function () {
+        this.playStyle += 1;
+        if (this.playStyle == 6)
+            this.playStyle = 0;
+        if (!BootState.differentBacktrack() && this.playStyle == 3)
+            this.playStyle = 0;
+        this.restart();
+    };
+    MainState.prototype.restart = function () {
+        if (this.renderManager != null) {
+            this.renderManager.destroy();
+        }
+        this.displayMusic = this.playMusic = this.melodyMusic;
+        if (this.playStyle >= 4)
+            this.displayMusic = this.chordMusic;
+        if (this.playStyle == 3 || this.playStyle == 5) {
+            this.playMusic = this.chordMusic;
+        }
+        this.displayMusic.setSimplify(false, false);
+        this.playMusic.setSimplify(false, false);
+        if (this.playStyle == 1 || this.playStyle == 2) {
+            this.displayMusic.setSimplify(true, this.playStyle == 2);
+            this.playMusic.setSimplify(true, this.playStyle == 2);
+        }
+        this.renderManager = new RenderManager(this.game, this.displayMusic);
+        this.barPosition = 0;
     };
     MainState.prototype.update = function () {
         var elapsedMS = this.game.time.elapsedMS;
@@ -149,13 +178,20 @@ var Background = (function (_super) {
         bgr.width = _this.game.width;
         bgr.height = _this.game.height;
         bgr.inputEnabled = true;
-        bgr.events.onInputDown.add(function () { this.goLoopPosition(); }, _this.state);
+        bgr.events.onInputDown.add(function () {
+            if (game.input.position.y < 700) {
+                this.goLoopPosition();
+            }
+            else {
+                this.nextPlayStyle();
+            }
+        }, _this.state);
         var ttl = _this.game.add.image(0, 0, "sprites", "rectangle", _this);
         ttl.width = _this.game.width;
         ttl.height = 50;
         ttl.tint = 0x0D76D9;
         ttl.inputEnabled = true;
-        ttl.events.onInputDown.add(function () { this.setLoopPosition(0); }, _this.state);
+        ttl.events.onInputDown.add(function () { this.restart(); }, _this.state);
         var name = _this.game.add.bitmapText(_this.game.width / 4, 9, "font", title, 32, _this);
         name.anchor.x = 0.5;
         name.tint = 0x063B6c * 0;
@@ -710,6 +746,7 @@ var Music = (function () {
         this.tempo = parseInt(music.tempo, 10);
         this.name = music.title;
         this.bars = [];
+        this.isSimplified = false;
         for (var _i = 0, _a = music.bars; _i < _a.length; _i++) {
             var b = _a[_i];
             this.bars.push(new Bar(b, this, this.bars.length));
@@ -719,6 +756,16 @@ var Music = (function () {
             cLastStrum = this.bars[n].scanNextStrum(cLastStrum);
         }
     }
+    Music.prototype.setSimplify = function (simplify, useDrone) {
+        this.isSimplified = simplify;
+        this.useDrone = useDrone;
+    };
+    Music.prototype.getSimplify = function () {
+        return this.isSimplified;
+    };
+    Music.prototype.getDroneUse = function () {
+        return this.useDrone;
+    };
     Music.prototype.getDefaultTempo = function () {
         return this.tempo;
     };
@@ -748,6 +795,7 @@ var Strum = (function () {
     function Strum(def, startTime, bar) {
         this.startTime = startTime;
         this.bar = bar;
+        this.music = bar.getMusic();
         this.strum = [];
         def = def.toLowerCase();
         this.length = def.charCodeAt(Configuration.strings) - 96;
@@ -758,7 +806,23 @@ var Strum = (function () {
         this.chordName = Configuration.instrument.getChordName(this.strum);
         this.nextChordChange = null;
     }
+    Strum.prototype.simplify = function (chrom, drone) {
+        var result = [];
+        var highNote = -1;
+        for (var n = 0; n < chrom.length; n++) {
+            result[n] = chrom[n];
+            if (chrom[n] != Strum.NOSTRUM)
+                highNote = n;
+        }
+        for (var n = 0; n < highNote; n++) {
+            result[n] = drone ? 0 : Strum.NOSTRUM;
+        }
+        return result;
+    };
     Strum.prototype.getStrum = function () {
+        if (this.music.getSimplify()) {
+            return this.simplify(this.strum, this.music.getDroneUse());
+        }
         return this.strum;
     };
     Strum.prototype.getStartTime = function () {
