@@ -3,6 +3,8 @@
 class MainState extends Phaser.State {
 
     public static VERSION:string="0.01 26-Nov-17 Phaser-CE 2.8.7 (c) PSR 2017";
+    private melodyMusic:IMusic;
+    private chordMusic:IMusic;
     private displayMusic:IMusic;
     private playMusic:IMusic;
     private background:Background;
@@ -20,12 +22,11 @@ class MainState extends Phaser.State {
     init(music:IMusic) {
 
         Configuration.initialise();
-        var json1:any = this.game.cache.getJSON("music_display");
-        this.displayMusic = new Music(json1);
-        this.playMusic = this.displayMusic;
+        var json1:any = this.game.cache.getJSON("music_melody");
+        this.melodyMusic = new Music(json1);
+        this.playMusic = this.displayMusic = this.melodyMusic;
         if (BootState.differentBacktrack()) {
-            var json2:any = this.game.cache.getJSON("music_play");
-            this.playMusic = new Music(json2);
+            var json2:any = this.game.cache.getJSON("music_chords");
         }
 
     }

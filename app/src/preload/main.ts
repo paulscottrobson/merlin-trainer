@@ -53,29 +53,29 @@ class MerlinTrainerApplication extends Phaser.Game {
  */
 class BootState extends Phaser.State {
 
-    private static playName:string;
-    private static displayName:string;
+    private static chordsName:string;
+    private static melodyName:string;
 
     preload() : void {
         // Load the loader image
         this.game.load.image("loader","assets/sprites/loader.png");
         // Identify the music that is displayed (key::music)
-        BootState.displayName =
-            MerlinTrainerApplication.getURLName("music","music.json");
+        BootState.melodyName =
+            MerlinTrainerApplication.getURLName("melody","music.json");
         // Identify the music that is player (key:Play)
-        BootState.playName = 
-            MerlinTrainerApplication.getURLName("play",BootState.displayName);
+        BootState.chordsName = 
+            MerlinTrainerApplication.getURLName("chords",BootState.melodyName);
           
         // Load the music files
-        this.game.load.json("music_display",BootState.displayName);
-        this.game.load.json("music_play",BootState.playName);
-        console.log(BootState.displayName);
-        console.log(BootState.playName);
+        this.game.load.json("music_melody",BootState.melodyName);
+        this.game.load.json("music_chords",BootState.chordsName);
+        console.log(BootState.melodyName);
+        console.log(BootState.chordsName);
         this.game.load.onLoadComplete.add(() => { this.game.state.start("Preload",true,false,1); },this);
     }
 
     static differentBacktrack():boolean {
-        return BootState.playName != BootState.displayName;
+        return BootState.chordsName != BootState.melodyName;
     }
     
     create() : void {        

@@ -34,12 +34,11 @@ var MainState = (function (_super) {
     }
     MainState.prototype.init = function (music) {
         Configuration.initialise();
-        var json1 = this.game.cache.getJSON("music_display");
-        this.displayMusic = new Music(json1);
-        this.playMusic = this.displayMusic;
+        var json1 = this.game.cache.getJSON("music_melody");
+        this.melodyMusic = new Music(json1);
+        this.playMusic = this.displayMusic = this.melodyMusic;
         if (BootState.differentBacktrack()) {
-            var json2 = this.game.cache.getJSON("music_play");
-            this.playMusic = new Music(json2);
+            var json2 = this.game.cache.getJSON("music_chords");
         }
     };
     MainState.prototype.create = function () {
@@ -830,18 +829,18 @@ var BootState = (function (_super) {
     BootState.prototype.preload = function () {
         var _this = this;
         this.game.load.image("loader", "assets/sprites/loader.png");
-        BootState.displayName =
-            MerlinTrainerApplication.getURLName("music", "music.json");
-        BootState.playName =
-            MerlinTrainerApplication.getURLName("play", BootState.displayName);
-        this.game.load.json("music_display", BootState.displayName);
-        this.game.load.json("music_play", BootState.playName);
-        console.log(BootState.displayName);
-        console.log(BootState.playName);
+        BootState.melodyName =
+            MerlinTrainerApplication.getURLName("melody", "music.json");
+        BootState.chordsName =
+            MerlinTrainerApplication.getURLName("chords", BootState.melodyName);
+        this.game.load.json("music_melody", BootState.melodyName);
+        this.game.load.json("music_chords", BootState.chordsName);
+        console.log(BootState.melodyName);
+        console.log(BootState.chordsName);
         this.game.load.onLoadComplete.add(function () { _this.game.state.start("Preload", true, false, 1); }, this);
     };
     BootState.differentBacktrack = function () {
-        return BootState.playName != BootState.displayName;
+        return BootState.chordsName != BootState.melodyName;
     };
     BootState.prototype.create = function () {
         this.game.scale.pageAlignHorizontally = true;
