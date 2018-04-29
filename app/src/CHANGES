@@ -1,9 +1,0 @@
-0.92
-
-- Fixed left/right side spacing of adjuster spheres (bounds limited to whole object not just centre)
-- added song name and composer to display area.
-
-0.93
-
-- added control via keyboard [S N F <Space> A M <Enter>]
-- display % normal speed.

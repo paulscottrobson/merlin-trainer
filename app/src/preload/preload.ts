@@ -15,7 +15,7 @@ class PreloadState extends Phaser.State {
      */
     preload(): void {
         // Create the loading sprite
-        this.game.stage.backgroundColor = "#000040";
+        this.game.stage.backgroundColor = "#000000";
         var loader:Phaser.Sprite = this.add.sprite(this.game.width/2,
                                                    this.game.height/2,
                                                    "loader");
@@ -23,7 +23,8 @@ class PreloadState extends Phaser.State {
         loader.height = this.game.height / 8;        
         loader.anchor.setTo(0.5);
         this.game.load.setPreloadSprite(loader);
-        //this.game.load.json("sprites","assets/sprites/sprites.json")    
+        // Get the sprite info, which we may need to check later.
+        this.game.load.json("sprite_info","assets/sprites/sprites.json")    
         // Load the sprite atlas.
         this.game.load.atlas("sprites","assets/sprites/sprites.png",
                                        "assets/sprites/sprites.json");
@@ -32,8 +33,6 @@ class PreloadState extends Phaser.State {
             this.game.load.bitmapFont(fontName,"assets/fonts/"+fontName+".png",
                                                "assets/fonts/"+fontName+".fnt");
         }
-        // Load notes
-        Player.preload(this.game);
 
         // Load metronome sounds
         this.game.load.audio("metronome",["assets/sounds/metronome.mp3",

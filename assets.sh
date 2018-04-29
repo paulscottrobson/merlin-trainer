@@ -3,7 +3,9 @@
 #
 echo "Making Graphics"
 cd graphics
-python makeatlas.py
+python3 makeatlas.py
+python3 makecurves.py
+python3 makeframes.py
 
 echo "Copying to assets"
 cp sprites.* ../app/assets/sprites
