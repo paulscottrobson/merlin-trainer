@@ -1,7 +1,10 @@
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    }
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -24,23 +27,23 @@ var MainState = (function (_super) {
     }
     MainState.prototype.init = function () {
         Configuration.initialise(this.game);
-        var json = this.game.cache.getJSON("music");
     };
     MainState.prototype.create = function () {
     };
     MainState.prototype.destroy = function () {
     };
     MainState.prototype.update = function () {
+        var elapsedMS = this.game.time.elapsedMS;
     };
-    MainState.VERSION = "0.01 06-Dec-17 Phaser-CE 2.8.7 (c) PSR 2017";
+    MainState.VERSION = "0.01 11-Jun-18 Phaser-CE 2.8.7 (c) PSR 2018";
     return MainState;
 }(Phaser.State));
 window.onload = function () {
-    var game = new MerlinTrainerApplication();
+    var game = new StringTrainerApplication();
 };
-var MerlinTrainerApplication = (function (_super) {
-    __extends(MerlinTrainerApplication, _super);
-    function MerlinTrainerApplication() {
+var StringTrainerApplication = (function (_super) {
+    __extends(StringTrainerApplication, _super);
+    function StringTrainerApplication() {
         var _this = _super.call(this, {
             enableDebug: false,
             width: 1200,
@@ -55,12 +58,12 @@ var MerlinTrainerApplication = (function (_super) {
         _this.state.start("Boot");
         return _this;
     }
-    MerlinTrainerApplication.getURLName = function (key, defaultValue) {
+    StringTrainerApplication.getURLName = function (key, defaultValue) {
         if (defaultValue === void 0) { defaultValue = ""; }
         var name = decodeURIComponent(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + encodeURIComponent(key.toLowerCase()).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
         return (name == "") ? defaultValue : name;
     };
-    return MerlinTrainerApplication;
+    return StringTrainerApplication;
 }(Phaser.Game));
 var BootState = (function (_super) {
     __extends(BootState, _super);
@@ -69,9 +72,6 @@ var BootState = (function (_super) {
     }
     BootState.prototype.preload = function () {
         var _this = this;
-        this.game.load.image("loader", "assets/sprites/loader.png");
-        var musicKey = MerlinTrainerApplication.getURLName("music", "music.json");
-        this.game.load.json("music", musicKey);
         this.game.load.onLoadComplete.add(function () { _this.game.state.start("Preload", true, false, 1); }, this);
     };
     BootState.prototype.create = function () {

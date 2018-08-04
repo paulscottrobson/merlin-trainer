@@ -1,10 +1,10 @@
 /// <reference path="../../lib/phaser.comments.d.ts"/>
 
 window.onload = function() {
-    var game = new MerlinTrainerApplication();
+    var game = new StringTrainerApplication();
 }
 
-class MerlinTrainerApplication extends Phaser.Game {
+class StringTrainerApplication extends Phaser.Game {
 
     constructor() {
         // Call the super constructor.
@@ -49,11 +49,6 @@ class BootState extends Phaser.State {
 
     preload() : void {
         // Load the loader image
-        this.game.load.image("loader","assets/sprites/loader.png");
-        // Identify the music that is displayed (key::music)
-        var musicKey:string = MerlinTrainerApplication.getURLName("music","music.json");
-        // Load the music file
-        this.game.load.json("music",musicKey);
         this.game.load.onLoadComplete.add(() => { this.game.state.start("Preload",true,false,1); },this);
     }
     
