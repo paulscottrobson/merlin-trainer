@@ -22,4 +22,10 @@ for f in *.ogg; do
 done
 cd ../../..
 
+echo "Compiling samples for test index.html"
+cd compiler
+python testsongs.py 
+cp index.html ../app/
+cd ..
+
 echo "Done."
